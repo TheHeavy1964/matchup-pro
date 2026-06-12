@@ -1,0 +1,651 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Matchup Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            width: 480px;
+            min-height: 600px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background-image: 
+                radial-gradient(circle at 20% 50%, white 1px, transparent 1px),
+                radial-gradient(circle at 80% 50%, white 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(45deg, #fff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a1a;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sport-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .sport-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sport-tab.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-script {
+            background: linear-gradient(45deg, #00b09b, #96c93d);
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 176, 155, 0.3);
+        }
+
+        .btn-script:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 176, 155, 0.4);
+        }
+
+        .btn-script:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-script.copied {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .skeleton-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.5;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .quick-picks {
+            margin-bottom: 16px;
+        }
+
+        .quick-picks-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .quick-picks-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .quick-pick-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-pick-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .quick-pick-teams {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .quick-pick-info {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .matchup-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .teams-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .team-info {
+            flex: 1;
+            text-align: center;
+        }
+
+        .team-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .team-record {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .vs-divider {
+            font-size: 20px;
+            font-weight: 700;
+            opacity: 0.6;
+            margin: 0 16px;
+        }
+
+        .prediction-card {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+        }
+
+        .prediction-winner {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .prediction-details {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stats-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stats-tab.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .stats-content {
+            display: none;
+        }
+
+        .stats-content.active {
+            display: block;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .ai-insights {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 4px 16px rgba(155, 89, 182, 0.3);
+        }
+
+        .ai-insights-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-insight-item {
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .weather-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .weather-icon {
+            font-size: 24px;
+        }
+
+        .weather-details {
+            flex: 1;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .upgrade-prompt {
+            background: linear-gradient(45deg, #f39c12, #e74c3c);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 16px;
+            box-shadow: 0 4px 16px rgba(243, 156, 18, 0.3);
+        }
+
+        .upgrade-prompt h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .upgrade-prompt p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+
+        .features-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .feature-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .feature-desc {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🏈</div>
+                <div>
+                    <h1>Matchup Pro</h1>
+                    <div class="subtitle">Smart Football Analytics</div>
+                </div>
+            </div>
+            <div class="premium-badge" id="premiumBadge" style="cursor: pointer; display: none;">Pro</div>
+        </div>
+
+        <div class="search-section">
+            <div class="sport-tabs">
+                <button class="sport-tab active" data-sport="cfb">College</button>
+                <button class="sport-tab" data-sport="nfl">NFL</button>
+            </div>
+
+            <input type="text" class="search-input" id="teamInput" placeholder="Search teams (e.g., Georgia, Cowboys)" />
+
+            <!-- CFB Controls -->
+            <div id="cfbControls">
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <div class="control-label">Week</div>
+                        <select id="week"></select>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">Season</div>
+                        <select id="year"></select>
+                    </div>
+                </div>
+                <div class="control-group" style="margin-bottom: 16px;">
+                    <div class="control-label">Season Type</div>
+                    <select id="seasonType">
+                        <option value="regular">Regular</option>
+                        <option value="postseason">Postseason</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- NFL Controls -->
+            <div id="nflControls" style="display: none;">
+                <div class="control-group" style="margin-bottom: 16px;">
+                    <div class="control-label">Week</div>
+                    <select id="nflWeek"></select>
+                </div>
+            </div>
+
+            <!-- Hidden sport type selector for popup.js compatibility -->
+            <select id="sportType" style="display: none;">
+                <option value="cfb">College Football</option>
+                <option value="nfl">NFL</option>
+            </select>
+        </div>
+
+            <div class="quick-picks">
+                <div class="quick-picks-title">🔥 Featured Matchups</div>
+                <div class="quick-picks-grid" id="featuredMatchups">
+                    <div class="skeleton-card">Loading live matchups…</div>
+                    <div class="skeleton-card">Loading live matchups…</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="findBtn">
+                    <span>🔍</span> Find Matchup
+                </button>
+                <button class="btn btn-script" id="copyScriptBtn" disabled>
+                    <span>🎙️</span> Copy Script
+                </button>
+                <button class="btn btn-secondary" id="openOptions">
+                    <span>⚙️</span>
+                </button>
+            </div>
+
+            <!-- Results area - appears right after buttons -->
+            <div class="loading" id="loader" style="display: none;">
+                <div class="loading-spinner"></div>
+                <div>Analyzing matchup data...</div>
+            </div>
+            
+            <div id="output"></div>
+        </div>
+
+    <script src="html2canvas.min.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

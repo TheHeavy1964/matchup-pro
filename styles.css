@@ -1,0 +1,215 @@
+/* Base styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 480px;
+  padding: 16px;
+  margin: 0;
+  background: #f8f9fa;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Form elements */
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+input, select, button {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+input, select {
+  flex: 1;
+  background: white;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+button.secondary {
+  background: #6b7280;
+}
+
+button.secondary:hover {
+  background: #4b5563;
+}
+
+/* Sport selector */
+#sportType {
+  background: #1f2937;
+  color: white;
+  border-color: #374151;
+  font-weight: 500;
+}
+
+/* Loading */
+.loader {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 14px;
+  display: none;
+}
+
+/* Output area */
+#output {
+  margin-top: 16px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.vs {
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Footer */
+.footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* KPI layout */
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.item {
+  text-align: center;
+}
+
+/* Text styles */
+.small {
+  font-size: 12px;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+strong {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Winner display */
+.winner {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.badge {
+  background: #059669;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Note text */
+.note {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 12px;
+  line-height: 1.4;
+}
+
+/* Error handling */
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Sport-specific controls */
+#cfbControls, #nflControls {
+  transition: all 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 450px) {
+  body {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .vs {
+    order: -1;
+  }
+  
+  .kpi {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

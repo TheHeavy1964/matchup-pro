@@ -1,0 +1,9 @@
+{
+  "name": "matchup-pro-stripe-backend",
+  "version": "1.0.0",
+  "description": "Serverless backend to verify Stripe subscribers securely",
+  "main": "api/verify-stripe.js",
+  "dependencies": {
+    "stripe": "^14.0.0"
+  }
+}
