@@ -41,7 +41,7 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
 
 // Stripe Billing Configuration
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/5kQ14p4VngssagQ1lm24006";
-const VERIFICATION_API_URL = "https://your-vercel-domain.vercel.app/api/verify-stripe"; // Replace with your backend URL
+const VERIFICATION_API_URL = "https://matchup-pro.vercel.app/api/verify-stripe";
 
 const $ = (s) => document.querySelector(s);
 
