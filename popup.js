@@ -489,10 +489,12 @@ function getSplitPercentages(valLeft, valRight) {
   return { left: leftPct, right: 100 - leftPct };
 }
 
-async function getNFLTeamStats(teamAbbr) {
+async function getNFLTeamStats(teamAbbr, season) {
   try {
-    const currentYear = new Date().getFullYear();
-    const season = new Date().getMonth() < 3 ? currentYear - 1 : currentYear;
+    if (!season) {
+      const currentYear = new Date().getFullYear();
+      season = new Date().getMonth() < 3 ? currentYear - 1 : currentYear;
+    }
     const stats = await espnApi(`/football/nfl/teams/${teamAbbr.toLowerCase()}/statistics?season=${season}`);
     const offensive = {};
     const defensive = {};
@@ -650,15 +652,14 @@ function enhancedPredict(game, ratings, betting) {
   };
 }
 
-async function findNFLGame(team, week) {
+async function findNFLGame(team, year, week) {
   try {
     const teamCode = normalizeNFLTeamName(team);
     if (!teamCode) {
       throw new Error(`Team "${team}" not recognized. Try using team name or city (e.g., "Cowboys" or "Dallas")`);
     }
 
-    const currentYear = new Date().getFullYear();
-    const season = new Date().getMonth() < 3 ? currentYear - 1 : currentYear;
+    const season = year || (new Date().getMonth() < 3 ? new Date().getFullYear() - 1 : new Date().getFullYear());
     
     // Convert internal week values to ESPN API parameters
     let espnWeek, espnSeasonType;
@@ -1402,12 +1403,14 @@ async function initSelectors() {
       if (sportType) sportType.value = sport;
       
       // Show/hide controls
-      const cfbControls = $("#cfbControls");
-      const nflControls = $("#nflControls");
+      const cfbWeekContainer = $("#cfbWeekContainer");
+      const nflWeekContainer = $("#nflWeekContainer");
+      const cfbSeasonTypeContainer = $("#cfbSeasonTypeContainer");
       const teamInput = $("#teamInput");
       
-      if (cfbControls) cfbControls.style.display = isCFB ? "block" : "none";
-      if (nflControls) nflControls.style.display = isCFB ? "none" : "block";
+      if (cfbWeekContainer) cfbWeekContainer.style.display = isCFB ? "block" : "none";
+      if (nflWeekContainer) nflWeekContainer.style.display = isCFB ? "none" : "block";
+      if (cfbSeasonTypeContainer) cfbSeasonTypeContainer.style.display = isCFB ? "block" : "none";
       if (teamInput) teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
       
       // Reload featured matchups for selected sport
@@ -1628,10 +1631,12 @@ async function main() {
           // NFL Logic
           const weekSel = $("#nflWeek");
           const week = weekSel ? parseInt(weekSel.value, 10) : 5;
+          const yearSel = $("#year");
+          const year = yearSel ? parseInt(yearSel.value, 10) : 2024;
           
-          console.log('NFL week:', week);
+          console.log('NFL params:', { year, week, team });
 
-          const game = await findNFLGame(team, week);
+          const game = await findNFLGame(team, year, week);
           if (!game) {
             let weekText;
             if (week <= 4) {
@@ -1642,15 +1647,15 @@ async function main() {
               const playoffNames = ['Wild Card', 'Divisional', 'Conference Championship', 'Super Bowl'];
               weekText = playoffNames[week - 23] || `Playoff Week ${week - 22}`;
             }
-            setOutput(`<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 16px; text-align: center; color: #fff; margin-top: 16px;">No NFL game found for ${team} in ${weekText}.</div>`);
+            setOutput(`<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 16px; text-align: center; color: #fff; margin-top: 16px;">No NFL game found for ${team} in ${weekText}, ${year}.</div>`);
             setLoading(false);
             return;
           }
 
           // Fetch NFL Stats
           const [homeStats, awayStats] = await Promise.all([
-            getNFLTeamStats(game.homeAbbr),
-            getNFLTeamStats(game.awayAbbr)
+            getNFLTeamStats(game.homeAbbr, year),
+            getNFLTeamStats(game.awayAbbr, year)
           ]);
 
           const prediction = predictNFL(game);

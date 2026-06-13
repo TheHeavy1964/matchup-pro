@@ -689,33 +689,29 @@
 
             <input type="text" class="search-input" id="teamInput" placeholder="Search teams (e.g., Georgia, Cowboys)" />
 
-            <!-- CFB Controls -->
-            <div id="cfbControls">
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <div class="control-label">Week</div>
-                        <select id="week"></select>
+            <!-- Matchup Controls -->
+            <div class="controls-grid">
+                <div class="control-group">
+                    <div class="control-label">Week</div>
+                    <div id="cfbWeekContainer">
+                        <select id="week" style="width: 100%;"></select>
                     </div>
-                    <div class="control-group">
-                        <div class="control-label">Season</div>
-                        <select id="year"></select>
+                    <div id="nflWeekContainer" style="display: none;">
+                        <select id="nflWeek" style="width: 100%;"></select>
                     </div>
                 </div>
-                <div class="control-group" style="margin-bottom: 16px;">
-                    <div class="control-label">Season Type</div>
-                    <select id="seasonType">
-                        <option value="regular">Regular</option>
-                        <option value="postseason">Postseason</option>
-                    </select>
+                <div class="control-group">
+                    <div class="control-label">Season</div>
+                    <select id="year" style="width: 100%;"></select>
                 </div>
             </div>
 
-            <!-- NFL Controls -->
-            <div id="nflControls" style="display: none;">
-                <div class="control-group" style="margin-bottom: 16px;">
-                    <div class="control-label">Week</div>
-                    <select id="nflWeek"></select>
-                </div>
+            <div id="cfbSeasonTypeContainer" class="control-group" style="margin-bottom: 16px;">
+                <div class="control-label">Season Type</div>
+                <select id="seasonType" style="width: 100%;">
+                    <option value="regular">Regular</option>
+                    <option value="postseason">Postseason</option>
+                </select>
             </div>
 
             <!-- Hidden sport type selector for popup.js compatibility -->
