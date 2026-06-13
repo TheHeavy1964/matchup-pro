@@ -1531,7 +1531,11 @@ async function main() {
   const openOptions = $("#openOptions");
   if (openOptions) {
     openOptions.addEventListener("click", () => {
-      chrome.runtime.openOptionsPage();
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        window.open("options.html", "_blank");
+      }
     });
   }
 
