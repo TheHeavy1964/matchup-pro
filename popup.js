@@ -303,7 +303,60 @@ function normalizeNFLTeamName(input) {
   return NFL_TEAMS[normalized] || null;
 }
 
-function sanitizeTeamName(name) {
+function normalizeCFBTeamName(input) {
+  const normalized = input.toLowerCase().trim();
+  const aliases = {
+    "university of miami": "Miami",
+    "miami hurricanes": "Miami",
+    "miami fl": "Miami",
+    "miami (fl)": "Miami",
+    "um": "Miami",
+    "uofm": "Miami",
+    "usc": "USC",
+    "southern california": "USC",
+    "southern cal": "USC",
+    "university of southern california": "USC",
+    "lsu": "LSU",
+    "louisiana state": "LSU",
+    "penn state": "Penn State",
+    "psu": "Penn State",
+    "ohio state": "Ohio State",
+    "osu": "Ohio State",
+    "michigan state": "Michigan State",
+    "msu": "Michigan State",
+    "florida state": "Florida State",
+    "fsu": "Florida State",
+    "texas a&m": "Texas A&M",
+    "tamu": "Texas A&M",
+    "virginia tech": "Virginia Tech",
+    "vt": "Virginia Tech",
+    "georgia tech": "Georgia Tech",
+    "gt": "Georgia Tech",
+    "ole miss": "Ole Miss",
+    "mississippi": "Ole Miss",
+    "nc state": "NC State",
+    "north carolina state": "NC State",
+    "tcu": "TCU",
+    "texas christian": "TCU",
+    "byu": "BYU",
+    "brigham young": "BYU",
+    "smu": "SMU",
+    "southern methodist": "SMU",
+    "utsa": "UTSA",
+    "utep": "UTEP",
+    "uab": "UAB",
+    "usf": "South Florida",
+    "south florida": "South Florida",
+    "ucf": "UCF",
+    "central florida": "UCF"
+  };
+  return aliases[normalized] || input.trim();
+}
+
+function sanitizeTeamName(name, sportType = "cfb") {
+  if (sportType === "cfb") {
+    return normalizeCFBTeamName(name);
+  }
   return name.trim();
 }
 
@@ -1548,14 +1601,12 @@ async function main() {
       console.log('Find button clicked');
       
       try {
-        const teamInput = $("#teamInput");
-        const team = teamInput ? sanitizeTeamName(teamInput.value) : '';
-        
-        console.log('Team input:', team);
-        
         // Determine sport type based on active tab
         const activeTab = document.querySelector('.sport-tab.active');
         const sportType = activeTab ? activeTab.dataset.sport : 'cfb';
+
+        const teamInput = $("#teamInput");
+        const team = teamInput ? sanitizeTeamName(teamInput.value, sportType) : '';
         
         console.log('Sport type:', sportType);
 
