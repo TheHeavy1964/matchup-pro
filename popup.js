@@ -1411,11 +1411,13 @@ async function initSelectors() {
       const nflWeekContainer = $("#nflWeekContainer");
       const cfbSeasonTypeContainer = $("#cfbSeasonTypeContainer");
       const teamInput = $("#teamInput");
+      const analyticsNav = $(".analytics-nav");
       
       if (cfbWeekContainer) cfbWeekContainer.style.display = isCFB ? "block" : "none";
       if (nflWeekContainer) nflWeekContainer.style.display = isCFB ? "none" : "block";
       if (cfbSeasonTypeContainer) cfbSeasonTypeContainer.style.display = isCFB ? "block" : "none";
       if (teamInput) teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
+      if (analyticsNav) analyticsNav.style.display = isCFB ? "flex" : "none";
       
       // Reload featured matchups for selected sport
       loadFeaturedMatchups();
