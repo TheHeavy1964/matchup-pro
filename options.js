@@ -2,7 +2,7 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
   // Try to share the same window-level mock object if already initialized in parent
   if (!window.chrome || !window.chrome.storage) {
     const mockStorage = {
-      apiKey: "test-cfbd-key",
+      apiKey: "3db1e9c835b04d898461abb034c6c858",
       isPremium: false,
       stripeEmail: "",
       defaultYear: "2024",
@@ -60,7 +60,11 @@ async function restore() {
     "apiKey", "defaultYear", "defaultWeek", "stripeEmail", "isPremium"
   ]);
 
-  if (apiKey) $("#apiKey").value = apiKey;
+  if (apiKey && apiKey !== "test-cfbd-key" && apiKey !== "test-valid-key") {
+    $("#apiKey").value = apiKey;
+  } else {
+    $("#apiKey").value = "3db1e9c835b04d898461abb034c6c858";
+  }
   if (defaultYear) $("#defaultYear").value = defaultYear;
   if (defaultWeek !== undefined) $("#defaultWeek").value = defaultWeek;
   if (stripeEmail) $("#stripeEmail").value = stripeEmail;
@@ -105,12 +109,50 @@ function updatePremiumUI(isPremium, email) {
 
 restore();
 
-// Save CFBD API Key
+// Save & Validate CFBD API Key
 $("#saveBtn").addEventListener("click", async () => {
   const apiKey = $("#apiKey").value.trim();
-  await chrome.storage.sync.set({ apiKey });
-  $("#status").textContent = "Saved ✓";
-  setTimeout(() => $("#status").textContent = "", 2000);
+  const statusEl = $("#status");
+  if (!statusEl) return;
+
+  statusEl.textContent = "Validating key... ⏳";
+  statusEl.style.color = "#a5b4fc";
+
+  if (!apiKey) {
+    statusEl.textContent = "Please enter an API key. ✗";
+    statusEl.style.color = "#ef4444";
+    setTimeout(() => statusEl.textContent = "", 3000);
+    return;
+  }
+
+  if (apiKey.startsWith("test-")) {
+    // Save mock key directly without querying live server
+    await chrome.storage.sync.set({ apiKey });
+    statusEl.textContent = "Saved (Mock Key Mode) ✓";
+    statusEl.style.color = "#fbbf24";
+    setTimeout(() => statusEl.textContent = "", 3000);
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.collegefootballdata.com/games?year=2024&week=1", {
+      headers: { Authorization: `Bearer ${apiKey}` }
+    });
+    if (res.ok) {
+      await chrome.storage.sync.set({ apiKey });
+      statusEl.textContent = "Key validated and saved successfully! ✓";
+      statusEl.style.color = "#10b981";
+    } else {
+      statusEl.textContent = `Validation failed: API returned status ${res.status}. Key not saved. ✗`;
+      statusEl.style.color = "#ef4444";
+    }
+  } catch (err) {
+    statusEl.textContent = `Validation failed: ${err.message}. Key not saved. ✗`;
+    statusEl.style.color = "#ef4444";
+  }
+  setTimeout(() => {
+    statusEl.textContent = "";
+  }, 4000);
 });
 
 // Save Search Defaults

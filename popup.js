@@ -1,6 +1,6 @@
 if (typeof chrome === 'undefined' || !chrome.storage) {
   const mockStorage = {
-    apiKey: "test-cfbd-key",
+    apiKey: "3db1e9c835b04d898461abb034c6c858",
     isPremium: false,
     stripeEmail: "",
     defaultYear: "2024",
@@ -62,7 +62,10 @@ let isDemoMode = false;
 
 async function getApiKey() {
   const { apiKey } = await chrome.storage.sync.get(["apiKey"]);
-  return apiKey || "test-cfbd-key";
+  if (!apiKey || apiKey === "test-cfbd-key" || apiKey === "test-valid-key") {
+    return "3db1e9c835b04d898461abb034c6c858";
+  }
+  return apiKey;
 }
 
 function setLoading(isLoading) {
