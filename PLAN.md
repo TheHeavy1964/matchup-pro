@@ -44,10 +44,19 @@
 - [x] Build a "Share to X (Twitter)" button pre-populating game picks and download link.
 - [x] Add a "Refer a Friend" promo widget offering premium feature tryouts.
 
+### Milestone 9: Advanced Local Analytics & Sub-panels
+- [x] Intercept dropdown clicks on the "Analytics" dropdown.
+- [x] Embed detailed advanced box scores (Success Rates, Explosiveness, Havoc) from `/game/box/advanced`.
+- [x] Render play-by-play win probability charts as responsive SVG curves from `/metrics/wp`.
+- [x] Display multi-year SP+ team rating history trends from `/ratings/sp?team={team}`.
+- [x] Sort and present player efficiency leaderboards (Average PPA) from `/ppa/players/season`.
+- [x] Implement a CSV Data Exporter downloading seasonal SP+ team rankings.
+- [x] Build an interactive normal distribution-based Situation Win Probability Calculator.
+
 ---
 
 ## 🚀 Current Trajectory
-We have finalized the core Matchup Pro browser extension features: completed dynamic theme styling (Classic, Cyberpunk, Gold VIP), custom score overlay input fields, personalized branding watermarks for exported social media Hype Cards, and integrated an elegant "Refer a Friend" widget. We also implemented a bulletproof demo-mode fallback for unlicensed or invalid API keys.
+We have successfully implemented a fully contextual, premium advanced analytics dashboard directly inside the extension popup. Clicks on the top "Analytics" dropdown are intercepted and query live CFB APIs to render beautiful glassmorphic analytics sub-panels: Advanced Box Scores, SVG Win Probability flows, SP+ Team Trends, Player PPA Efficiency leaderboards, a downloadable CSV Data Exporter for SP+ rankings, and a situation-based live Win Probability Calculator using a CDF normal distribution approximation model.
 
 ---
 
@@ -55,4 +64,4 @@ We have finalized the core Matchup Pro browser extension features: completed dyn
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Verify premium visual dashboards, custom overlays, and viral loop templates in Chrome Extension interface | 🟢 Completed |
+| **Antigravity** | Implement contextual advanced analytics sub-panels, charts, and situation calculator in popup.js | 🟢 Completed |
