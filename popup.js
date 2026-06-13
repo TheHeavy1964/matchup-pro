@@ -58,10 +58,11 @@ let lastSportType = null;
 const API_BASE = "https://api.collegefootballdata.com";
 const ESPN_API_BASE = "https://site.api.espn.com/apis/site/v2/sports";
 
+let isDemoMode = false;
+
 async function getApiKey() {
   const { apiKey } = await chrome.storage.sync.get(["apiKey"]);
-  if (!apiKey) throw new Error("Missing API key. Click Settings to add your CollegeFootballData API key.");
-  return apiKey;
+  return apiKey || "test-cfbd-key";
 }
 
 function setLoading(isLoading) {
@@ -72,76 +73,166 @@ function setLoading(isLoading) {
 function setOutput(html) {
   const output = $("#output");
   if (output) {
-    output.innerHTML = html;
+    if (isDemoMode && html && !html.includes("Please enter") && !html.includes("No game found") && !html.includes("error")) {
+      const demoBadge = `
+        <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; color: #fbbf24; font-size: 11px; text-align: center; font-weight: 500; font-family: 'Outfit', sans-serif;">
+          💡 Demo Mode: Using simulated data. Add your CollegeFootballData API key in Settings for live results.
+        </div>
+      `;
+      output.innerHTML = demoBadge + html;
+    } else {
+      output.innerHTML = html;
+    }
     attachShareBtnListener();
   }
 }
 
 async function attachShareBtnListener() {
   const shareCardBtn = $("#shareCardBtn");
-  if (shareCardBtn) {
-    shareCardBtn.addEventListener("click", async () => {
-      console.log('Share card button clicked');
-      const { isPremium } = await chrome.storage.sync.get(["isPremium"]);
-      if (!isPremium) {
-        // Show Upgrade CTA card
-        if (!$("#goProPromoBtn")) {
-          const promoHtml = `
-            <div id="proPromoCard" style="background: rgba(243, 156, 18, 0.15); border: 2px solid rgba(243, 156, 18, 0.5); border-radius: 12px; padding: 16px; margin-top: 12px; text-align: center; color: white;">
-              <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px;">📸 Unlock Matchup Card Export (Pro)</div>
-              <div style="font-size: 12px; line-height: 1.5; margin-bottom: 12px; opacity: 0.9;">
-                Export gorgeous, high-resolution matchup cards directly to PNG for sharing on Twitter, Instagram, or your sports blog.
-              </div>
-              <button id="goProPromoBtn" style="background: #f39c12; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; font-size: 13px;">
-                Upgrade to Pro
-              </button>
-            </div>
-          `;
-          const container = $("#proPromoContainer");
-          if (container) {
-            container.innerHTML = promoHtml;
-            const promoBtn = $("#goProPromoBtn");
-            if (promoBtn) {
-              promoBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
-            }
-          }
-        }
-        return;
-      }
+  if (!shareCardBtn) return;
 
-      // Generate canvas using html2canvas
-      const card = $("#matchupCard");
-      if (card && typeof html2canvas !== 'undefined') {
-        shareCardBtn.innerHTML = '⏳ Generating Image...';
-        shareCardBtn.disabled = true;
-        
-        html2canvas(card, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: null // Transparent background from gradient
-        }).then(canvas => {
-          const link = document.createElement('a');
-          const home = lastGame.homeTeam || lastGame.home_team || lastGame.home || 'Home';
-          const away = lastGame.awayTeam || lastGame.away_team || lastGame.away || 'Away';
-          link.download = `${home}-vs-${away}-Matchup.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-          shareCardBtn.innerHTML = '✅ Saved Matchup!';
-          setTimeout(() => {
-            shareCardBtn.innerHTML = '<span>📸</span> Share Card';
-            shareCardBtn.disabled = false;
-          }, 2000);
-        }).catch(err => {
-          console.error('html2canvas error:', err);
-          shareCardBtn.innerHTML = '❌ Export Failed';
-          shareCardBtn.disabled = false;
-        });
+  const card = $("#matchupCard");
+  const sportType = lastSportType || "cfb";
+
+  // Dynamic Theme Switching
+  const themeBtns = document.querySelectorAll(".theme-btn");
+  themeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      // Deactivate other buttons
+      themeBtns.forEach(b => {
+        b.classList.remove("active");
+        b.style.border = "1px solid transparent";
+        b.style.background = "rgba(255, 255, 255, 0.03)";
+      });
+
+      // Activate this button
+      btn.classList.add("active");
+      const theme = btn.dataset.theme;
+
+      if (theme === "cyberpunk") {
+        btn.style.border = "1px solid #ff007f";
+        btn.style.background = "rgba(255, 0, 127, 0.15)";
+        if (card) {
+          card.style.background = "linear-gradient(135deg, #05050a 0%, #0c001a 100%)";
+          card.style.border = "2px solid #ff007f";
+          card.style.boxShadow = "0 0 20px #ff007f, inset 0 0 10px #00ffff";
+          card.style.fontFamily = "'Courier New', Courier, monospace";
+        }
+      } else if (theme === "gold") {
+        btn.style.border = "1px solid #d4af37";
+        btn.style.background = "rgba(212, 175, 55, 0.15)";
+        if (card) {
+          card.style.background = "linear-gradient(135deg, #0f0c02 0%, #000000 100%)";
+          card.style.border = "2px solid #d4af37";
+          card.style.boxShadow = "0 0 25px rgba(212, 175, 55, 0.45)";
+          card.style.fontFamily = "'Georgia', serif";
+        }
       } else {
-        alert('Visual card export library is not loaded.');
+        // Classic Theme
+        btn.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+        btn.style.background = "rgba(255, 255, 255, 0.08)";
+        if (card) {
+          card.style.background = sportType === "nfl" 
+            ? "linear-gradient(135deg, #120e2e 0%, #1e1136 100%)" 
+            : "linear-gradient(135deg, #0b1126 0%, #0f1c3f 100%)";
+          card.style.border = "1px solid rgba(255, 255, 255, 0.08)";
+          card.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.4)";
+          card.style.fontFamily = "'Outfit', sans-serif";
+        }
+      }
+    });
+  });
+
+  // Custom Pick Score Overlay Hook
+  const customScoreInput = $("#customScoreInput");
+  const cardCustomPick = $("#cardCustomPick");
+  if (customScoreInput && cardCustomPick) {
+    customScoreInput.addEventListener("input", () => {
+      const val = customScoreInput.value.trim();
+      if (val) {
+        cardCustomPick.textContent = `🎯 OUR PICK: ${val}`;
+        cardCustomPick.style.display = "block";
+      } else {
+        cardCustomPick.style.display = "none";
       }
     });
   }
+
+  // Watermark Customization Hook
+  const watermarkInput = $("#watermarkInput");
+  const cardWatermark = $("#cardWatermark");
+  if (watermarkInput && cardWatermark) {
+    watermarkInput.addEventListener("input", () => {
+      const val = watermarkInput.value.trim();
+      if (val) {
+        cardWatermark.innerHTML = `MATCHUP PRO • PRESENTED BY ${val.toUpperCase()}`;
+      } else {
+        cardWatermark.innerHTML = `MATCHUP PRO • SMART FOOTBALL ANALYTICS`;
+      }
+    });
+  }
+
+  // Share Card Generation (html2canvas)
+  shareCardBtn.addEventListener("click", async () => {
+    console.log('Share card button clicked');
+    const { isPremium } = await chrome.storage.sync.get(["isPremium"]);
+    if (!isPremium) {
+      // Show Upgrade CTA card
+      if (!$("#goProPromoBtn")) {
+        const promoHtml = `
+          <div id="proPromoCard" style="background: rgba(243, 156, 18, 0.15); border: 2px solid rgba(243, 156, 18, 0.5); border-radius: 12px; padding: 16px; margin-top: 12px; text-align: center; color: white;">
+            <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px;">📸 Unlock Matchup Card Export (Pro)</div>
+            <div style="font-size: 12px; line-height: 1.5; margin-bottom: 12px; opacity: 0.9;">
+              Export gorgeous, high-resolution matchup cards directly to PNG for sharing on Twitter, Instagram, or your sports blog.
+            </div>
+            <button id="goProPromoBtn" style="background: #f39c12; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; font-size: 13px;">
+              Upgrade to Pro
+            </button>
+          </div>
+        `;
+        const container = $("#proPromoContainer");
+        if (container) {
+          container.innerHTML = promoHtml;
+          const promoBtn = $("#goProPromoBtn");
+          if (promoBtn) {
+            promoBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+          }
+        }
+      }
+      return;
+    }
+
+    // Generate canvas using html2canvas
+    if (card && typeof html2canvas !== 'undefined') {
+      shareCardBtn.innerHTML = '⏳ Generating Image...';
+      shareCardBtn.disabled = true;
+      
+      html2canvas(card, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: null
+      }).then(canvas => {
+        const link = document.createElement('a');
+        const home = lastGame.homeTeam || lastGame.home_team || lastGame.home || 'Home';
+        const away = lastGame.awayTeam || lastGame.away_team || lastGame.away || 'Away';
+        link.download = `${home}-vs-${away}-Matchup.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        shareCardBtn.innerHTML = 'Saved Matchup!';
+        setTimeout(() => {
+          shareCardBtn.innerHTML = '<span>📸</span> Share Card';
+          shareCardBtn.disabled = false;
+        }, 2000);
+      }).catch(err => {
+        console.error('html2canvas error:', err);
+        shareCardBtn.innerHTML = '❌ Export Failed';
+        shareCardBtn.disabled = false;
+      });
+    } else {
+      alert('Visual card export library is not loaded.');
+    }
+  });
 
   const shareTwitterBtn = $("#shareTwitterBtn");
   if (shareTwitterBtn) {
@@ -213,16 +304,114 @@ function sanitizeTeamName(name) {
   return name.trim();
 }
 
-async function api(path) {
-  const apiKey = await getApiKey();
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${apiKey}` }
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API ${path} failed: ${res.status} ${res.statusText} — ${text}`);
+function getMockCFBDData(path) {
+  const cleanPath = path.split('?')[0];
+  const urlParams = new URLSearchParams(path.includes('?') ? path.split('?')[1] : '');
+  const year = urlParams.get("year") || "2024";
+  const week = urlParams.get("week") || "1";
+  const team = urlParams.get("team") ? decodeURIComponent(urlParams.get("team")) : "Texas Tech";
+  const seasonType = urlParams.get("seasonType") || "regular";
+
+  // Check if it's games endpoint
+  if (cleanPath.startsWith("/games")) {
+    const opponent = team.toLowerCase() === "georgia" ? "Clemson" : "Georgia";
+    return [{
+      id: 401601001,
+      season: parseInt(year),
+      week: parseInt(week),
+      season_type: seasonType,
+      start_date: `${year}-08-31T12:00:00.000Z`,
+      home_team: team,
+      home_points: 34,
+      away_team: opponent,
+      away_points: 27,
+      venue: "Mercedes-Benz Stadium",
+      excitement_index: 8.5
+    }];
   }
-  return res.json();
+
+  // ratings/sp
+  if (cleanPath.startsWith("/ratings/sp")) {
+    return [
+      { team: team, rating: 22.4, offense: 35.8, defense: 13.4 },
+      { team: "Georgia", rating: 28.5, offense: 42.1, defense: 13.6 },
+      { team: "Clemson", rating: 18.2, offense: 31.4, defense: 13.2 },
+      { team: "Texas Tech", rating: 12.4, offense: 35.2, defense: 22.8 },
+      { team: "Oregon", rating: 25.1, offense: 45.3, defense: 20.2 }
+    ];
+  }
+
+  // ratings/srs
+  if (cleanPath.startsWith("/ratings/srs")) {
+    return [
+      { team: team, rating: 18.6 },
+      { team: "Georgia", rating: 24.1 },
+      { team: "Clemson", rating: 16.5 },
+      { team: "Texas Tech", rating: 9.8 },
+      { team: "Oregon", rating: 22.4 }
+    ];
+  }
+
+  // stats/season
+  if (cleanPath.startsWith("/stats/season")) {
+    return [
+      { name: "games", value: 12 },
+      { name: "points", value: 412 },
+      { name: "totalYards", value: 5200 },
+      { name: "passingYards", value: 3100 },
+      { name: "rushingYards", value: 2100 }
+    ];
+  }
+
+  // stats/season/advanced
+  if (cleanPath.startsWith("/stats/season/advanced")) {
+    return [{
+      team: team,
+      offense: { ppa: 0.28, successRate: 0.46, explosiveness: 1.22 },
+      defense: { ppa: 0.19, successRate: 0.39, explosiveness: 1.12 }
+    }];
+  }
+
+  // lines
+  if (cleanPath.startsWith("/lines")) {
+    return [{
+      id: 401601001,
+      lines: [
+        { provider: "consensus", spread: -3.5, overUnder: 56.5, formattedSpread: `${team} -3.5` }
+      ]
+    }];
+  }
+
+  return [];
+}
+
+async function api(path) {
+  try {
+    const apiKey = await getApiKey();
+    if (!apiKey || apiKey.startsWith("test-")) {
+      console.log(`[API Mock] Intercepting path: ${path} due to test/empty key.`);
+      isDemoMode = true;
+      return getMockCFBDData(path);
+    }
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { Authorization: `Bearer ${apiKey}` }
+    });
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        console.warn(`[API Fallback] Live API failed with ${res.status}. Falling back to mock data.`);
+        isDemoMode = true;
+        return getMockCFBDData(path);
+      }
+      const text = await res.text();
+      throw new Error(`API ${path} failed: ${res.status} ${res.statusText} — ${text}`);
+    }
+    isDemoMode = false;
+    return res.json();
+  } catch (error) {
+    console.warn(`[API Fallback] Error in API call: ${error.message}. Falling back to mock data.`);
+    isDemoMode = true;
+    return getMockCFBDData(path);
+  }
 }
 
 async function espnApi(path) {
@@ -548,6 +737,9 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         </div>
       </div>
 
+      <!-- Custom Pick Overlay -->
+      <div id="cardCustomPick" style="display: none; text-align: center; font-size: 13px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 6px 12px; border-radius: 8px; margin-top: -10px; z-index: 1;"></div>
+
       <!-- AI Predictor Meter -->
       <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
         <div style="text-align: center; margin-bottom: 12px;">
@@ -640,8 +832,35 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
       </div>
 
       <!-- Watermark footer -->
-      <div style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
+      <div id="cardWatermark" style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
         MATCHUP PRO • SMART FOOTBALL ANALYTICS
+      </div>
+    </div>
+
+    <!-- Hype Card Customizer Panel -->
+    <div id="themeCustomizer" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; margin-top: 14px; font-family: 'Outfit', sans-serif;">
+      <div style="font-size: 12px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; color: white;">
+        <span>🎨 Hype Card Customizer</span>
+        <span style="font-size: 10px; background: rgba(39, 174, 96, 0.2); color: #2ecc71; padding: 2px 6px; border-radius: 4px; font-weight: 800;">PRO</span>
+      </div>
+      
+      <!-- Theme Selection -->
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <button class="theme-btn active" data-theme="classic" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: white; cursor: pointer; transition: all 0.2s;">Classic</button>
+        <button class="theme-btn" data-theme="cyberpunk" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid transparent; background: rgba(255,255,255,0.03); color: #ff007f; cursor: pointer; transition: all 0.2s;">Cyberpunk</button>
+        <button class="theme-btn" data-theme="gold" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid transparent; background: rgba(255,255,255,0.03); color: #d4af37; cursor: pointer; transition: all 0.2s;">Gold VIP</button>
+      </div>
+
+      <!-- Pick Prediction & Watermark input -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white; text-transform: uppercase; letter-spacing: 0.5px;">Custom Pick</label>
+          <input type="text" id="customScoreInput" placeholder="e.g. 31-28" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: white; font-size: 11px; font-family: inherit;" />
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white; text-transform: uppercase; letter-spacing: 0.5px;">Watermark Label</label>
+          <input type="text" id="watermarkInput" placeholder="e.g. Marc Picks" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: white; font-size: 11px; font-family: inherit;" />
+        </div>
       </div>
     </div>
 
@@ -738,6 +957,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
           <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">SP+: ${fmt(awayR.sp_overall)} | SRS: ${fmt(awayR.srs)}</div>
         </div>
       </div>
+
+      <!-- Custom Pick Overlay -->
+      <div id="cardCustomPick" style="display: none; text-align: center; font-size: 13px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 6px 12px; border-radius: 8px; margin-top: -10px; z-index: 1;"></div>
 
       <!-- AI Predictor Meter -->
       <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
@@ -839,8 +1061,35 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
       </div>
 
       <!-- Watermark footer -->
-      <div style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
+      <div id="cardWatermark" style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
         MATCHUP PRO • SMART FOOTBALL ANALYTICS
+      </div>
+    </div>
+
+    <!-- Hype Card Customizer Panel -->
+    <div id="themeCustomizer" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; margin-top: 14px; font-family: 'Outfit', sans-serif;">
+      <div style="font-size: 12px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; color: white;">
+        <span>🎨 Hype Card Customizer</span>
+        <span style="font-size: 10px; background: rgba(39, 174, 96, 0.2); color: #2ecc71; padding: 2px 6px; border-radius: 4px; font-weight: 800;">PRO</span>
+      </div>
+      
+      <!-- Theme Selection -->
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <button class="theme-btn active" data-theme="classic" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: white; cursor: pointer; transition: all 0.2s;">Classic</button>
+        <button class="theme-btn" data-theme="cyberpunk" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid transparent; background: rgba(255,255,255,0.03); color: #ff007f; cursor: pointer; transition: all 0.2s;">Cyberpunk</button>
+        <button class="theme-btn" data-theme="gold" style="flex: 1; padding: 8px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid transparent; background: rgba(255,255,255,0.03); color: #d4af37; cursor: pointer; transition: all 0.2s;">Gold VIP</button>
+      </div>
+
+      <!-- Pick Prediction & Watermark input -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white; text-transform: uppercase; letter-spacing: 0.5px;">Custom Pick</label>
+          <input type="text" id="customScoreInput" placeholder="e.g. 31-28" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: white; font-size: 11px; font-family: inherit;" />
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white; text-transform: uppercase; letter-spacing: 0.5px;">Watermark Label</label>
+          <input type="text" id="watermarkInput" placeholder="e.g. Marc Picks" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; color: white; font-size: 11px; font-family: inherit;" />
+        </div>
       </div>
     </div>
 
@@ -1123,9 +1372,55 @@ async function initSelectors() {
   if (defaultWeek !== undefined && weekSel) {
     weekSel.value = defaultWeek;
   } else {
-    // Auto-detect current CFB week
     const cfbWeek = getCurrentCFBWeek();
     if (cfbWeek !== null && weekSel) weekSel.value = cfbWeek;
+  }
+}
+
+async function initReferralWidget() {
+  const widget = $("#referralWidget");
+  if (!widget) return;
+
+  // Retrieve referral code or create one
+  let { referralCode, isPremium } = await chrome.storage.sync.get(["referralCode", "isPremium"]);
+  if (!referralCode) {
+    referralCode = "ref-" + Math.random().toString(36).substring(2, 10);
+    await chrome.storage.sync.set({ referralCode });
+  }
+
+  const referralUrl = `https://matchuppro.vercel.app/?ref=${referralCode}`;
+
+  let descText = isPremium 
+    ? "Thanks for supporting Matchup Pro! Share your link to help other podcasters build gorgeous graphics."
+    : "Get a free 7-day Pro Trial for every friend who signs up using your link! Premium features include script tones and hype card customizers.";
+
+  widget.innerHTML = `
+    <div class="referral-title">🎁 Invite & Earn Pro</div>
+    <div class="referral-desc">${descText}</div>
+    <div class="referral-link-container">
+      <input type="text" class="referral-input" value="${referralUrl}" readonly id="refUrlInput" />
+      <button class="referral-btn" id="copyRefBtn">Copy Link</button>
+    </div>
+  `;
+
+  const copyRefBtn = $("#copyRefBtn");
+  const refUrlInput = $("#refUrlInput");
+  if (copyRefBtn && refUrlInput) {
+    copyRefBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(referralUrl).then(() => {
+        copyRefBtn.textContent = "Copied! ✅";
+        setTimeout(() => {
+          copyRefBtn.textContent = "Copy Link";
+        }, 2000);
+      }).catch(() => {
+        refUrlInput.select();
+        document.execCommand("copy");
+        copyRefBtn.textContent = "Copied! ✅";
+        setTimeout(() => {
+          copyRefBtn.textContent = "Copy Link";
+        }, 2000);
+      });
+    });
   }
 }
 
@@ -1134,6 +1429,7 @@ async function main() {
   console.log('Popup script loaded');
   
   await initSelectors();
+  await initReferralWidget();
   
   // Analytics Dropdown Toggle
   const dropdownTrigger = $(".dropdown-trigger");

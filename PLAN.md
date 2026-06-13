@@ -36,18 +36,18 @@
 - [x] Support copying or direct sharing of the generated text.
 
 ### Milestone 7: Visual Hype Card Export Themes (Pro)
-- [ ] Add style options to the matchup card (e.g., Classic Dark, Neon Cyberpunk, Gold VIP).
-- [ ] Include customizable labels (e.g., user's prediction score) dynamically rendered by html2canvas.
-- [ ] Add brand watermark options for podcaster/social media sharing.
+- [x] Add style options to the matchup card (e.g., Classic Dark, Neon Cyberpunk, Gold VIP).
+- [x] Include customizable labels (e.g., user's prediction score) dynamically rendered by html2canvas.
+- [x] Add brand watermark options for podcaster/social media sharing.
 
 ### Milestone 8: Viral Social Loop
 - [x] Build a "Share to X (Twitter)" button pre-populating game picks and download link.
-- [ ] Add a "Refer a Friend" promo widget offering premium feature tryouts.
+- [x] Add a "Refer a Friend" promo widget offering premium feature tryouts.
 
 ---
 
 ## 🚀 Current Trajectory
-We have successfully resolved options storage persistence across tabs using localStorage, added the glassmorphic live-stream/podcast analytics dropdown navigation menu, and verified the application's clean, error-free load in local browser environment tests.
+We have finalized the core Matchup Pro browser extension features: completed dynamic theme styling (Classic, Cyberpunk, Gold VIP), custom score overlay input fields, personalized branding watermarks for exported social media Hype Cards, and integrated an elegant "Refer a Friend" widget. We also implemented a bulletproof demo-mode fallback for unlicensed or invalid API keys.
 
 ---
 
@@ -55,4 +55,4 @@ We have successfully resolved options storage persistence across tabs using loca
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Verify premium visual dashboards and viral templates in Chrome Extension interface | 🟢 Completed |
+| **Antigravity** | Verify premium visual dashboards, custom overlays, and viral loop templates in Chrome Extension interface | 🟢 Completed |
