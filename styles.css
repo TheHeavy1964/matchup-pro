@@ -1,110 +1,259 @@
-/* Base styles */
+/* Premium Dark-Mode & Glassmorphism Theme for Matchup Pro */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   width: 480px;
-  padding: 16px;
-  margin: 0;
-  background: #f8f9fa;
+  min-height: 600px;
+  padding: 24px;
+  background: linear-gradient(135deg, #121026 0%, #22143b 100%);
+  color: #f3f4f6;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background floating grid visual pattern */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.04;
+  background-image: 
+    radial-gradient(circle at 20% 50%, white 1px, transparent 1px),
+    radial-gradient(circle at 80% 50%, white 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 h1 {
-  font-size: 18px;
-  margin: 0 0 16px 0;
-  color: #1a1a1a;
-  font-weight: 600;
+  font-size: 24px;
+  margin: 0 0 20px 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(45deg, #ffffff, #c7d2fe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  z-index: 1;
 }
 
 h3 {
-  font-size: 14px;
-  margin: 0 0 8px 0;
-  color: #333;
+  font-size: 16px;
+  margin: 0 0 12px 0;
+  color: #ffffff;
   font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
-/* Form elements */
-.row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-input, select, button {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-input, select {
-  flex: 1;
-  background: white;
-}
-
-input:focus, select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-button {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-button:hover {
-  background: #2563eb;
-}
-
-button.secondary {
-  background: #6b7280;
-}
-
-button.secondary:hover {
-  background: #4b5563;
-}
-
-/* Sport selector */
-#sportType {
-  background: #1f2937;
-  color: white;
-  border-color: #374151;
-  font-weight: 500;
-}
-
-/* Loading */
-.loader {
-  text-align: center;
-  padding: 20px;
-  color: #6b7280;
-  font-size: 14px;
-  display: none;
-}
-
-/* Output area */
-#output {
-  margin-top: 16px;
-}
-
-/* Cards */
+/* Glassmorphism Card Containers */
 .card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .card:last-child {
   margin-bottom: 0;
 }
 
-/* Grid layout */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a5b4fc;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Horizontal Layout Rows */
+.row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.row:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Premium Form Elements */
+input, select {
+  flex: 1;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #ffffff;
+  font-family: inherit;
+  transition: all 0.25s ease;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #a5b4fc;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.15);
+}
+
+/* Premium Buttons & Interactive States */
+button {
+  padding: 12px 20px;
+  background: linear-gradient(45deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: linear-gradient(45deg, #6366f1, #8b5cf6);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+}
+
+button:active {
+  transform: translateY(0.5px);
+}
+
+button.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Stripe Activation Status Badging */
+#premiumStatus {
+  display: inline-block;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+#premiumStatus.active {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+#premiumStatus.inactive {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+button.deactivate-btn {
+  background: linear-gradient(45deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+button.deactivate-btn:hover {
+  background: linear-gradient(45deg, #f87171, #ef4444);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+
+/* Premium Link Visual */
+#stripeLink {
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  color: #111827;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#stripeLink:hover {
+  background: linear-gradient(45deg, #fcd34d, #fbbf24);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+}
+
+#stripeLink:active {
+  transform: translateY(0.5px);
+}
+
+/* Auxiliary Text */
+.note {
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.note.small {
+  margin-top: 6px;
+}
+
+.muted {
+  color: #9ca3af;
+}
+
+#status, #activationStatus {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Layout Utilities */
 .grid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -116,100 +265,32 @@ button.secondary:hover {
   text-align: center;
   font-weight: bold;
   font-size: 16px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
-/* Footer */
 .footer {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f3f4f6;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* KPI layout */
-.kpi {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
-}
-
-.item {
-  text-align: center;
-}
-
-/* Text styles */
-.small {
-  font-size: 12px;
-}
-
-.muted {
-  color: #6b7280;
-}
-
-strong {
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-/* Winner display */
-.winner {
-  text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.badge {
-  background: #059669;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Note text */
-.note {
-  font-size: 12px;
-  color: #6b7280;
-  font-style: italic;
-  margin-top: 12px;
-  line-height: 1.4;
-}
-
-/* Error handling */
-.error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-/* Sport-specific controls */
-#cfbControls, #nflControls {
-  transition: all 0.2s ease;
-}
-
-/* Responsive adjustments */
+/* Responsive Scaling for smaller extension viewports */
 @media (max-width: 450px) {
   body {
     width: 100%;
-    padding: 12px;
+    padding: 16px;
   }
   
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
-  
-  .vs {
-    order: -1;
-  }
-  
-  .kpi {
-    grid-template-columns: 1fr;
-    gap: 12px;
+
+  button, input, select {
+    width: 100%;
   }
 }

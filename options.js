@@ -41,7 +41,7 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
 
 // Stripe Billing Configuration
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/5kQ14p4VngssagQ1lm24006";
-const VERIFICATION_API_URL = "https://matchup-pro.vercel.app/api/verify-stripe";
+const VERIFICATION_API_URL = "https://matchup-pro.vercel.app/api/verify-stripe"; // Replace with your backend URL
 
 const $ = (s) => document.querySelector(s);
 
@@ -66,32 +66,29 @@ function updatePremiumUI(isPremium, email) {
   const statusEl = $("#premiumStatus");
   const activateBtn = $("#activateBtn");
   const emailInput = $("#stripeEmail");
-  const statusMsg = $("#activationStatus");
 
   if (!statusEl) return;
 
   if (isPremium) {
     statusEl.textContent = "Status: Pro Version (Active ✓)";
-    statusEl.style.background = "#d1fae5";
-    statusEl.style.color = "#065f46";
+    statusEl.className = "active";
     if (emailInput) {
       emailInput.value = email || "";
       emailInput.disabled = true;
     }
     if (activateBtn) {
       activateBtn.textContent = "Deactivate License";
-      activateBtn.style.background = "#dc2626";
+      activateBtn.className = "deactivate-btn";
     }
   } else {
     statusEl.textContent = "Status: Free Version (Inactive)";
-    statusEl.style.background = "#fee2e2";
-    statusEl.style.color = "#991b1b";
+    statusEl.className = "inactive";
     if (emailInput) {
       emailInput.disabled = false;
     }
     if (activateBtn) {
       activateBtn.textContent = "Verify & Activate";
-      activateBtn.style.background = "#3b82f6";
+      activateBtn.className = "";
     }
   }
 }
@@ -127,7 +124,7 @@ $("#activateBtn").addEventListener("click", async () => {
     updatePremiumUI(false, "");
     if (emailInput) emailInput.value = "";
     statusMsg.textContent = "License deactivated.";
-    statusMsg.style.color = "#4b5563";
+    statusMsg.style.color = "#a5b4fc";
     return;
   }
 
@@ -135,19 +132,19 @@ $("#activateBtn").addEventListener("click", async () => {
   const email = emailInput.value.trim().toLowerCase();
   if (!email) {
     statusMsg.textContent = "Please enter an email address.";
-    statusMsg.style.color = "#dc2626";
+    statusMsg.style.color = "#f87171";
     return;
   }
 
   statusMsg.textContent = "Verifying subscription status...";
-  statusMsg.style.color = "#2563eb";
+  statusMsg.style.color = "#a5b4fc";
 
   // DEVELOPER TESTING BACKDOOR: Always accepts test@test.com and developer admin emails
   if (email === "test@test.com" || email === "derrick@innov8edge.sbs") {
     await chrome.storage.sync.set({ isPremium: true, stripeEmail: email });
     updatePremiumUI(true, email);
     statusMsg.textContent = "Pro Mode activated (Dev Pass)!";
-    statusMsg.style.color = "#059669";
+    statusMsg.style.color = "#34d399";
     return;
   }
 
