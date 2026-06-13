@@ -2,7 +2,7 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
   // Try to share the same window-level mock object if already initialized in parent
   if (!window.chrome || !window.chrome.storage) {
     const mockStorage = {
-      apiKey: "3db1e9c835b04d898461abb034c6c858",
+      apiKey: "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA",
       isPremium: false,
       stripeEmail: "",
       defaultYear: "2024",
@@ -60,10 +60,10 @@ async function restore() {
     "apiKey", "defaultYear", "defaultWeek", "stripeEmail", "isPremium"
   ]);
 
-  if (apiKey && apiKey !== "test-cfbd-key" && apiKey !== "test-valid-key") {
+  if (apiKey && apiKey !== "test-cfbd-key" && apiKey !== "test-valid-key" && apiKey !== "3db1e9c835b04d898461abb034c6c858") {
     $("#apiKey").value = apiKey;
   } else {
-    $("#apiKey").value = "3db1e9c835b04d898461abb034c6c858";
+    $("#apiKey").value = "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA";
   }
   if (defaultYear) $("#defaultYear").value = defaultYear;
   if (defaultWeek !== undefined) $("#defaultWeek").value = defaultWeek;

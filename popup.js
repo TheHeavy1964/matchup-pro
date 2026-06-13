@@ -1,6 +1,6 @@
 if (typeof chrome === 'undefined' || !chrome.storage) {
   const mockStorage = {
-    apiKey: "3db1e9c835b04d898461abb034c6c858",
+    apiKey: "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA",
     isPremium: false,
     stripeEmail: "",
     defaultYear: "2024",
@@ -62,8 +62,8 @@ let isDemoMode = false;
 
 async function getApiKey() {
   const { apiKey } = await chrome.storage.sync.get(["apiKey"]);
-  if (!apiKey || apiKey === "test-cfbd-key" || apiKey === "test-valid-key") {
-    return "3db1e9c835b04d898461abb034c6c858";
+  if (!apiKey || apiKey === "test-cfbd-key" || apiKey === "test-valid-key" || apiKey === "3db1e9c835b04d898461abb034c6c858") {
+    return "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA";
   }
   return apiKey;
 }
