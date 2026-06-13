@@ -378,9 +378,10 @@ function getMockCFBDData(path) {
       season_type: seasonType,
       start_date: `${year}-08-31T12:00:00.000Z`,
       home_team: team,
+      home_conference: team.toLowerCase() === "georgia" ? "SEC" : "Big 12",
       home_points: 34,
       away_team: opponent,
-      away_points: 27,
+      away_conference: opponent.toLowerCase() === "georgia" ? "SEC" : "ACC",
       venue: "Mercedes-Benz Stadium",
       excitement_index: 8.5
     }];
@@ -966,6 +967,8 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
 
   const homeR = ratings[home] || {};
   const awayR = ratings[away] || {};
+  const homeConf = game.homeConference || game.home_conference || "";
+  const awayConf = game.awayConference || game.away_conference || "";
 
   // Stats split percentages
   const homePPG = parseFloat(homeStats?.offense?.pointsPerGame) || 0;
@@ -1001,14 +1004,14 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
       <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; position: relative; z-index: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 16px;">
         <div style="text-align: left;">
           <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Home</div>
-          <div style="font-size: 18px; font-weight: 800; color: #fff;">${home}</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${home} ${homeConf ? `<span style="font-size: 11px; font-weight: 500; opacity: 0.6; color: #a5b4fc; vertical-align: middle; margin-left: 4px;">(${homeConf})</span>` : ''}</div>
           ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${homePoints}</div>` : ''}
           <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">SP+: ${fmt(homeR.sp_overall)} | SRS: ${fmt(homeR.srs)}</div>
         </div>
         <div style="text-align: center; font-weight: bold; font-size: 14px; color: #7c3aed; background: rgba(124, 58, 237, 0.12); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(124, 58, 237, 0.25); margin-top: ${hasScore ? '-20px' : '0px'}">VS</div>
         <div style="text-align: right;">
           <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Away</div>
-          <div style="font-size: 18px; font-weight: 800; color: #fff;">${away}</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${away} ${awayConf ? `<span style="font-size: 11px; font-weight: 500; opacity: 0.6; color: #a5b4fc; vertical-align: middle; margin-left: 4px;">(${awayConf})</span>` : ''}</div>
           ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${awayPoints}</div>` : ''}
           <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">SP+: ${fmt(awayR.sp_overall)} | SRS: ${fmt(awayR.srs)}</div>
         </div>
@@ -1714,6 +1717,8 @@ async function main() {
               // Fallback to basic display without records
               const homeName = game.home_team || game.homeTeam;
               const awayName = game.away_team || game.awayTeam;
+              const homeConf = game.homeConference || game.home_conference || "";
+              const awayConf = game.awayConference || game.away_conference || "";
               const gameDate = game.start_date || game.startDate;
               const formattedDate = gameDate ? new Date(gameDate).toLocaleString() : "";
               
@@ -1722,13 +1727,13 @@ async function main() {
                   <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 16px;">
                     <div>
                       <div style="font-size: 12px; opacity: 0.7;">Home</div>
-                      <div><strong>${homeName}</strong></div>
+                      <div><strong>${homeName}</strong> ${homeConf ? `<span style="font-size: 10px; opacity: 0.6;">(${homeConf})</span>` : ''}</div>
                       <div style="font-size: 12px;">Record: Loading...</div>
                     </div>
                     <div style="text-align: center; font-weight: bold; font-size: 20px; opacity: 0.6;">vs</div>
                     <div>
                       <div style="font-size: 12px; opacity: 0.7;">Away</div>
-                      <div><strong>${awayName}</strong></div>
+                      <div><strong>${awayName}</strong> ${awayConf ? `<span style="font-size: 10px; opacity: 0.6;">(${awayConf})</span>` : ''}</div>
                       <div style="font-size: 12px;">Record: Loading...</div>
                     </div>
                   </div>
