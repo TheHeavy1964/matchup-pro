@@ -901,8 +901,8 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
     `;
   }
 
-  const homePoints = game.home_points != null ? game.home_points : null;
-  const awayPoints = game.away_points != null ? game.away_points : null;
+  const homePoints = game.homePoints !== undefined && game.homePoints !== null ? game.homePoints : (game.home_points != null ? game.home_points : null);
+  const awayPoints = game.awayPoints !== undefined && game.awayPoints !== null ? game.awayPoints : (game.away_points != null ? game.away_points : null);
   const hasScore = homePoints !== null && awayPoints !== null;
   
   const spreadText = betting?.formattedSpread || 
@@ -1057,9 +1057,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
         <div style="display: flex; justify-content: space-between;">
           <span style="opacity: 0.6;">🎯 Over/Under Total:</span> <span style="font-weight: 600; color: #f59e0b;">${totalText}</span>
         </div>
-        ${game.excitement_index ? `
+        ${(game.excitementIndex !== undefined || game.excitement_index !== undefined) ? `
         <div style="display: flex; justify-content: space-between;">
-          <span style="opacity: 0.6;">⚡ Game Excitement Index:</span> <span style="font-weight: 600; color: #fbbf24;">${fmt(game.excitement_index, 1)}/10</span>
+          <span style="opacity: 0.6;">⚡ Game Excitement Index:</span> <span style="font-weight: 600; color: #fbbf24;">${fmt(game.excitementIndex !== undefined ? game.excitementIndex : game.excitement_index, 1)}/10</span>
         </div>` : ''}
       </div>
 
