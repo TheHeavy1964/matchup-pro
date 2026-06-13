@@ -774,6 +774,8 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
 
   const homeAbbr = game.homeAbbr || 'HOME';
   const awayAbbr = game.awayAbbr || 'AWAY';
+  const hasScore = game.homeScore !== undefined && game.homeScore !== null && game.homeScore !== "" &&
+                   (game.status?.toLowerCase().includes("final") || (game.status !== "Scheduled" && game.status !== "Delayed"));
 
   return `
     <div id="matchupCard" style="background: linear-gradient(135deg, #120e2e 0%, #1e1136 100%); border-radius: 16px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); color: white; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; gap: 20px;">
@@ -785,12 +787,14 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         <div style="text-align: left;">
           <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Home</div>
           <div style="font-size: 18px; font-weight: 800; color: #fff;">${game.homeTeam}</div>
+          ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${game.homeScore}</div>` : ''}
           <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">Record: ${fmtRecord(game.homeRecord)}</div>
         </div>
-        <div style="text-align: center; font-weight: bold; font-size: 14px; color: #7c3aed; background: rgba(124, 58, 237, 0.12); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(124, 58, 237, 0.25);">VS</div>
+        <div style="text-align: center; font-weight: bold; font-size: 14px; color: #7c3aed; background: rgba(124, 58, 237, 0.12); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(124, 58, 237, 0.25); margin-top: ${hasScore ? '-20px' : '0px'}">VS</div>
         <div style="text-align: right;">
           <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Away</div>
           <div style="font-size: 18px; font-weight: 800; color: #fff;">${game.awayTeam}</div>
+          ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${game.awayScore}</div>` : ''}
           <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">Record: ${fmtRecord(game.awayRecord)}</div>
         </div>
       </div>
