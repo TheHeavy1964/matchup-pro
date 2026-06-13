@@ -142,8 +142,8 @@ $("#activateBtn").addEventListener("click", async () => {
   statusMsg.textContent = "Verifying subscription status...";
   statusMsg.style.color = "#2563eb";
 
-  // DEVELOPER TESTING BACKDOOR: Always accepts test@test.com
-  if (email === "test@test.com") {
+  // DEVELOPER TESTING BACKDOOR: Always accepts test@test.com and developer admin emails
+  if (email === "test@test.com" || email === "derrick@innov8edge.sbs") {
     await chrome.storage.sync.set({ isPremium: true, stripeEmail: email });
     updatePremiumUI(true, email);
     statusMsg.textContent = "Pro Mode activated (Dev Pass)!";

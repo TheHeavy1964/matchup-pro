@@ -30,16 +30,23 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Email parameter is required' });
     }
 
-    console.log(`[Stripe Verification] Checking subscription for: ${email}`);
+    const searchEmail = email.trim().toLowerCase();
+    console.log(`[Stripe Verification] Checking subscription for: ${searchEmail}`);
+
+    // Admin / Developer whitelist bypass
+    if (searchEmail === 'derrick@innov8edge.sbs' || searchEmail === 'test@test.com') {
+      console.log(`[Stripe Verification] Whitelisted email bypass triggered for: ${searchEmail}`);
+      return res.status(200).json({ active: true, message: 'Developer admin whitelisted bypass activated.' });
+    }
 
     // 1. Search for customer in Stripe by email
     const customers = await stripe.customers.list({
-      email: email.trim().toLowerCase(),
+      email: searchEmail,
       limit: 1
     });
 
     if (customers.data.length === 0) {
-      console.log(`[Stripe Verification] No customer found for email: ${email}`);
+      console.log(`[Stripe Verification] No customer found for email: ${searchEmail}`);
       return res.status(200).json({ active: false, message: 'No Stripe customer found.' });
     }
 
@@ -53,7 +60,7 @@ module.exports = async (req, res) => {
     });
 
     if (subscriptions.data.length > 0) {
-      console.log(`[Stripe Verification] Active subscription found for: ${email}`);
+      console.log(`[Stripe Verification] Active subscription found for: ${searchEmail}`);
       return res.status(200).json({ 
         active: true, 
         customerId: customerId,
@@ -61,8 +68,24 @@ module.exports = async (req, res) => {
       });
     }
 
-    console.log(`[Stripe Verification] No active subscription found for customer ID: ${customerId}`);
-    return res.status(200).json({ active: false, message: 'Customer exists but has no active subscription.' });
+    // 3. Fallback: Check for completed one-time checkout sessions (lifetime purchase)
+    const sessions = await stripe.checkout.sessions.list({
+      customer: customerId,
+      limit: 5
+    });
+
+    const paidSession = sessions.data.find(s => s.payment_status === 'paid');
+    if (paidSession) {
+      console.log(`[Stripe Verification] One-time paid purchase found for: ${searchEmail}`);
+      return res.status(200).json({
+        active: true,
+        customerId: customerId,
+        message: 'Lifetime product purchase verified.'
+      });
+    }
+
+    console.log(`[Stripe Verification] No active subscription or paid checkout found for customer ID: ${customerId}`);
+    return res.status(200).json({ active: false, message: 'Customer exists but has no active subscription or purchase.' });
 
   } catch (error) {
     console.error('[Stripe Verification] Error handling request:', error);
