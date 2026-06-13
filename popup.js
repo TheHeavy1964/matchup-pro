@@ -1730,8 +1730,582 @@ async function main() {
     });
   }
 
+  // Handle Analytics Dropdown item clicks
+  const closeAnalyticsBtn = $("#closeAnalyticsBtn");
+  const analyticsContainer = $("#analyticsContainer");
+  if (closeAnalyticsBtn && analyticsContainer) {
+    closeAnalyticsBtn.addEventListener("click", () => {
+      analyticsContainer.style.display = "none";
+    });
+  }
+
+  const dropdownItems = document.querySelectorAll(".dropdown-item");
+  dropdownItems.forEach(item => {
+    item.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const dropdownContent = $(".dropdown-content");
+      if (dropdownContent) dropdownContent.style.display = "none"; // Hide dropdown
+
+      const label = item.textContent.trim().substring(2).trim(); // Strip emoji
+      const href = item.getAttribute("href");
+
+      console.log("Analytics clicked:", label);
+
+      // Verify we have a loaded CFB game
+      if (!lastGame || lastSportType !== "cfb") {
+        showLocalAnalyticsMessage("⚠️ Analytics Context Required", `Please search for a College Football matchup first (e.g. "Georgia") before running advanced analytics.`);
+        return;
+      }
+
+      // Show container and loader
+      analyticsContainer.style.display = "block";
+      const titleEl = $("#analyticsTitle");
+      if (titleEl) titleEl.textContent = `📈 ${label}`;
+      
+      const loaderEl = $("#analyticsLoader");
+      const bodyEl = $("#analyticsBody");
+      if (loaderEl) loaderEl.style.display = "block";
+      if (bodyEl) {
+        bodyEl.style.display = "none";
+        bodyEl.innerHTML = "";
+      }
+
+      analyticsContainer.scrollIntoView({ behavior: "smooth" });
+
+      try {
+        let contentHtml = "";
+
+        if (label.includes("Box Scores")) {
+          contentHtml = await renderDetailedBoxScore(lastGame);
+        } else if (label.includes("Win Probability Chart")) {
+          contentHtml = await renderWinProbabilityChart(lastGame);
+        } else if (label.includes("SP+ Team Trends")) {
+          contentHtml = await renderSPTeamTrends(lastGame);
+        } else if (label.includes("Player Efficiency")) {
+          contentHtml = await renderPlayerEfficiency(lastGame);
+        } else if (label.includes("Data Exporter")) {
+          await runDataExporter(lastGame);
+          contentHtml = `
+            <div style="background: rgba(39, 174, 96, 0.15); border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 8px; padding: 12px; text-align: center; color: #2ecc71;">
+              <strong>Success!</strong> CSV spreadsheet containing SP+ ratings for the ${lastGame.season || new Date().getFullYear()} season has been compiled and downloaded. Check your Downloads folder.
+            </div>
+          `;
+        } else if (label.includes("Win Probability Calculator")) {
+          contentHtml = renderWPLocalCalculator(lastGame);
+        } else {
+          // Fallback: open external link in new tab
+          window.open(href, "_blank");
+          analyticsContainer.style.display = "none";
+          return;
+        }
+
+        if (bodyEl) {
+          bodyEl.innerHTML = contentHtml;
+          bodyEl.style.display = "block";
+          if (loaderEl) loaderEl.style.display = "none";
+          
+          // Hook up calculate button if win probability calculator is rendered
+          const calcBtn = $("#localCalcBtn");
+          if (calcBtn) {
+            calcBtn.addEventListener("click", () => {
+              calculateLocalWP(lastGame);
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Analytics fetch error:", err);
+        if (bodyEl) {
+          bodyEl.innerHTML = `<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 12px; color: #fff;">Error loading analytics: ${err.message}</div>`;
+          bodyEl.style.display = "block";
+        }
+        if (loaderEl) loaderEl.style.display = "none";
+      }
+    });
+  });
+
   console.log('Event listeners set up');
 }
+
+// Analytics Display Helper Functions
+
+function showLocalAnalyticsMessage(title, message) {
+  const container = $("#analyticsContainer");
+  const titleEl = $("#analyticsTitle");
+  const loaderEl = $("#analyticsLoader");
+  const bodyEl = $("#analyticsBody");
+  
+  if (container) container.style.display = "block";
+  if (titleEl) titleEl.textContent = title;
+  if (loaderEl) loaderEl.style.display = "none";
+  if (bodyEl) {
+    bodyEl.style.display = "block";
+    bodyEl.innerHTML = `
+      <div style="background: rgba(243, 156, 18, 0.15); border: 1px solid rgba(243, 156, 18, 0.3); border-radius: 8px; padding: 12px; color: #f39c12; font-size: 12px; line-height: 1.5;">
+        ${message}
+      </div>
+    `;
+  }
+  if (container) container.scrollIntoView({ behavior: "smooth" });
+}
+
+async function getAdvancedBoxScore(gameId) {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${API_BASE}/game/box/advanced?id=${gameId}`, {
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  return res.json();
+}
+
+async function getWinProbabilityData(gameId) {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${API_BASE}/metrics/wp?gameId=${gameId}`, {
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  return res.json();
+}
+
+async function getTeamSPHistory(team) {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${API_BASE}/ratings/sp?team=${encodeURIComponent(team)}`, {
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  return res.json();
+}
+
+async function getSeasonSPRatings(year) {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${API_BASE}/ratings/sp?year=${year}`, {
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  return res.json();
+}
+
+async function getPlayerEfficiency(year, team) {
+  const apiKey = await getApiKey();
+  const res = await fetch(`${API_BASE}/ppa/players/season?year=${year}&team=${encodeURIComponent(team)}&threshold=20`, {
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  return res.json();
+}
+
+async function renderDetailedBoxScore(game) {
+  const data = await getAdvancedBoxScore(game.id);
+  if (!data || !data.teams) {
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No advanced box score data found for this game.</div>`;
+  }
+  
+  const teams = data.teams;
+  const sr = teams.successRates || [];
+  const exp = teams.explosiveness || [];
+  const havoc = teams.havoc || [];
+  
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+
+  const findIndex = (arr, teamName) => arr.findIndex(t => t.team?.toLowerCase() === teamName?.toLowerCase());
+  
+  const homeSRIdx = findIndex(sr, home);
+  const awaySRIdx = findIndex(sr, away);
+  const homeExpIdx = findIndex(exp, home);
+  const awayExpIdx = findIndex(exp, away);
+  const homeHavIdx = findIndex(havoc, home);
+  const awayHavIdx = findIndex(havoc, away);
+
+  const getVal = (arr, idx, path) => {
+    if (idx === -1) return "—";
+    let curr = arr[idx];
+    const parts = path.split(".");
+    for (const p of parts) {
+      if (curr && curr[p] !== undefined) curr = curr[p];
+      else return "—";
+    }
+    return typeof curr === "number" ? curr : "—";
+  };
+
+  const fmtPct = (val) => val === "—" ? "—" : `${(val * 100).toFixed(1)}%`;
+  const fmtNum = (val, dec = 2) => val === "—" ? "—" : Number(val).toFixed(dec);
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 12px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Advanced Box Score (Post-Game Stats)</div>
+      
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.15); opacity: 0.8;">
+            <th style="padding: 6px 0;">Metric</th>
+            <th style="padding: 6px 0; color: #60a5fa; text-align: right;">${away}</th>
+            <th style="padding: 6px 0; color: #f43f5e; text-align: right;">${home}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; font-weight: 500;">Overall Success Rate</td>
+            <td style="padding: 8px 0; text-align: right; color: #60a5fa; font-weight: 600;">${fmtPct(getVal(sr, awaySRIdx, "overall.total"))}</td>
+            <td style="padding: 8px 0; text-align: right; color: #f43f5e; font-weight: 600;">${fmtPct(getVal(sr, homeSRIdx, "overall.total"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; font-weight: 500;">Standard Downs Success</td>
+            <td style="padding: 8px 0; text-align: right;">${fmtPct(getVal(sr, awaySRIdx, "standardDowns.total"))}</td>
+            <td style="padding: 8px 0; text-align: right;">${fmtPct(getVal(sr, homeSRIdx, "standardDowns.total"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; font-weight: 500;">Passing Downs Success</td>
+            <td style="padding: 8px 0; text-align: right;">${fmtPct(getVal(sr, awaySRIdx, "passingDowns.total"))}</td>
+            <td style="padding: 8px 0; text-align: right;">${fmtPct(getVal(sr, homeSRIdx, "passingDowns.total"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; font-weight: 500;">Explosiveness (PPA/Play)</td>
+            <td style="padding: 8px 0; text-align: right; color: #60a5fa; font-weight: 600;">${fmtNum(getVal(exp, awayExpIdx, "overall.total"))}</td>
+            <td style="padding: 8px 0; text-align: right; color: #f43f5e; font-weight: 600;">${fmtNum(getVal(exp, homeExpIdx, "overall.total"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; font-weight: 500;">Defensive Havoc Rate</td>
+            <td style="padding: 8px 0; text-align: right; color: #60a5fa; font-weight: 600;">${fmtPct(getVal(havoc, awayHavIdx, "total"))}</td>
+            <td style="padding: 8px 0; text-align: right; color: #f43f5e; font-weight: 600;">${fmtPct(getVal(havoc, homeHavIdx, "total"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; opacity: 0.7; padding-left: 8px;">— Front Seven Havoc</td>
+            <td style="padding: 8px 0; text-align: right; opacity: 0.8;">${fmtPct(getVal(havoc, awayHavIdx, "frontSeven"))}</td>
+            <td style="padding: 8px 0; text-align: right; opacity: 0.8;">${fmtPct(getVal(havoc, homeHavIdx, "frontSeven"))}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <td style="padding: 8px 0; opacity: 0.7; padding-left: 8px;">— DB Havoc</td>
+            <td style="padding: 8px 0; text-align: right; opacity: 0.8;">${fmtPct(getVal(havoc, awayHavIdx, "db"))}</td>
+            <td style="padding: 8px 0; text-align: right; opacity: 0.8;">${fmtPct(getVal(havoc, homeHavIdx, "db"))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function renderWinProbabilityChart(game) {
+  const data = await getWinProbabilityData(game.id);
+  if (!data || data.length === 0) {
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No play-by-play win probability chart data found for this game.</div>`;
+  }
+
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+
+  const width = 400;
+  const height = 150;
+  const padding = 20;
+
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+
+  const maxPlay = data[data.length - 1].playNumber || data.length;
+  
+  let points = [];
+  data.forEach(p => {
+    const playNum = p.playNumber || 0;
+    const wp = p.homeWinProbability !== undefined ? p.homeWinProbability : 0.5;
+    const x = padding + (playNum / maxPlay) * chartWidth;
+    const y = padding + (1 - wp) * chartHeight;
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  });
+
+  const polylinePoints = points.join(" ");
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 10px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Win Probability Flow</div>
+      
+      <div style="position: relative; width: 100%; height: ${height}px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); padding: 4px; box-sizing: border-box;">
+        <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: 100%;">
+          <line x1="${padding}" y1="${height / 2}" x2="${width - padding}" y2="${height / 2}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4" />
+          
+          <text x="${padding}" y="${padding - 5}" fill="#f43f5e" font-size="8" font-weight="700" letter-spacing="0.5">${home.toUpperCase()} WINNING (100%)</text>
+          <text x="${padding}" y="${height - padding + 12}" fill="#3b82f6" font-size="8" font-weight="700" letter-spacing="0.5">${away.toUpperCase()} WINNING (100%)</text>
+
+          <polyline fill="none" stroke="url(#chartGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${polylinePoints}" />
+
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f43f5e" />
+              <stop offset="50%" stop-color="#a855f7" />
+              <stop offset="100%" stop-color="#3b82f6" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 9px; opacity: 0.6; padding: 0 4px;">
+        <span>Kickoff</span>
+        <span>4th Quarter / Final</span>
+      </div>
+    </div>
+  `;
+}
+
+async function renderSPTeamTrends(game) {
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+
+  const [homeData, awayData] = await Promise.all([
+    getTeamSPHistory(home),
+    getTeamSPHistory(away)
+  ]);
+
+  const yearsMap = {};
+  
+  const hList = Array.isArray(homeData) ? homeData : (homeData?.value || []);
+  const aList = Array.isArray(awayData) ? awayData : (awayData?.value || []);
+
+  hList.forEach(item => {
+    if (item.team === home) {
+      yearsMap[item.year] = yearsMap[item.year] || {};
+      yearsMap[item.year].home = item.rating;
+    }
+  });
+
+  aList.forEach(item => {
+    if (item.team === away) {
+      yearsMap[item.year] = yearsMap[item.year] || {};
+      yearsMap[item.year].away = item.rating;
+    }
+  });
+
+  const sortedYears = Object.keys(yearsMap).map(Number).sort((a, b) => b - a).slice(0, 6);
+
+  let rowsHtml = "";
+  sortedYears.forEach(year => {
+    const hVal = yearsMap[year]?.home;
+    const aVal = yearsMap[year]?.away;
+    rowsHtml += `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <td style="padding: 8px 0; font-weight: 600;">${year}</td>
+        <td style="padding: 8px 0; text-align: right; color: #60a5fa;">${aVal !== undefined ? aVal.toFixed(1) : "—"}</td>
+        <td style="padding: 8px 0; text-align: right; color: #f43f5e;">${hVal !== undefined ? hVal.toFixed(1) : "—"}</td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 10px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Multi-Year SP+ Rating History</div>
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.15); opacity: 0.8;">
+            <th style="padding: 6px 0;">Year</th>
+            <th style="padding: 6px 0; color: #60a5fa; text-align: right;">${away}</th>
+            <th style="padding: 6px 0; color: #f43f5e; text-align: right;">${home}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function renderPlayerEfficiency(game) {
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+  const year = game.season || game.year || new Date().getFullYear();
+
+  const [homePPA, awayPPA] = await Promise.all([
+    getPlayerEfficiency(year, home),
+    getPlayerEfficiency(year, away)
+  ]);
+
+  const hList = (Array.isArray(homePPA) ? homePPA : (homePPA?.value || [])).sort((a,b) => (b.averagePPA?.all || 0) - (a.averagePPA?.all || 0)).slice(0, 4);
+  const aList = (Array.isArray(awayPPA) ? awayPPA : (awayPPA?.value || [])).sort((a,b) => (b.averagePPA?.all || 0) - (a.averagePPA?.all || 0)).slice(0, 4);
+
+  const renderListHtml = (list, color) => {
+    if (list.length === 0) return `<div style="opacity:0.6;font-size:11px;">No active efficiency leaders found.</div>`;
+    return list.map(p => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <div>
+          <span style="font-weight:600; font-size: 11px;">${p.name}</span>
+          <span style="font-size:8px;opacity:0.6;background:rgba(255,255,255,0.1);padding:1px 3px;border-radius:3px;margin-left:4px;">${p.position}</span>
+        </div>
+        <div style="font-weight:700;color:${color}; font-size: 11px;">${(p.averagePPA?.all || 0).toFixed(3)}</div>
+      </div>
+    `).join("");
+  };
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 14px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Player Efficiency Leaders (Average PPA)</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div style="font-weight: 700; font-size: 11px; color: #60a5fa; margin-bottom: 8px; border-bottom: 1px solid rgba(96,165,250,0.2); padding-bottom: 4px;">${away}</div>
+          ${renderListHtml(aList, "#60a5fa")}
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 11px; color: #f43f5e; margin-bottom: 8px; border-bottom: 1px solid rgba(244,63,94,0.2); padding-bottom: 4px;">${home}</div>
+          ${renderListHtml(hList, "#f43f5e")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function runDataExporter(game) {
+  const year = game.season || game.year || new Date().getFullYear();
+  const ratings = await getSeasonSPRatings(year);
+  const list = Array.isArray(ratings) ? ratings : (ratings?.value || []);
+  if (list.length === 0) throw new Error("No data found to export.");
+
+  const headers = ["Year", "Team", "Conference", "Rating", "Ranking", "Offense Rating", "Offense Ranking", "Defense Rating", "Defense Ranking", "Special Teams Rating"];
+  const csvRows = [headers.join(",")];
+
+  list.forEach(r => {
+    if (r.team === "nationalAverages") return;
+    const row = [
+      r.year,
+      `"${r.team}"`,
+      `"${r.conference || ""}"`,
+      r.rating,
+      r.ranking || "",
+      r.offense?.rating || "",
+      r.offense?.ranking || "",
+      r.defense?.rating || "",
+      r.defense?.ranking || "",
+      r.specialTeams?.rating || ""
+    ];
+    csvRows.push(row.join(","));
+  });
+
+  const csvContent = csvRows.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `cfb_sp_ratings_${year}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function renderWPLocalCalculator(game) {
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+  return `
+    <div style="display: flex; flex-direction: column; gap: 12px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Live Win Probability Calculator</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Possession</label>
+          <select id="wpHomeBall" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;">
+            <option value="away">${away}</option>
+            <option value="home" selected>${home}</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Score Lead (Home - Away)</label>
+          <input type="number" id="wpScoreDiff" value="0" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;" />
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Down</label>
+          <select id="wpDown" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;">
+            <option value="1">1st</option>
+            <option value="2">2nd</option>
+            <option value="3">3rd</option>
+            <option value="4">4th</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Distance</label>
+          <input type="number" id="wpDistance" value="10" min="1" max="99" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Yds to Goal</label>
+          <input type="number" id="wpYardline" value="80" min="1" max="99" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;" />
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Quarter</label>
+          <select id="wpQuarter" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;">
+            <option value="1">1st Qtr</option>
+            <option value="2">2nd Qtr</option>
+            <option value="3">3rd Qtr</option>
+            <option value="4">4th Qtr</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 9px; opacity: 0.6; display: block; margin-bottom: 4px; color: white;">Time Left in Qtr (Sec)</label>
+          <input type="number" id="wpTimeSec" value="900" min="0" max="900" style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px; color:white; font-size:11px; font-family:inherit;" />
+        </div>
+      </div>
+
+      <button id="localCalcBtn" style="width: 100%; padding: 10px; font-weight: 700; font-size: 12px; background: linear-gradient(45deg, #00b09b, #96c93d); border: none; border-radius: 8px; color: white; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 12px rgba(0, 176, 155, 0.2); transition: all 0.2s;">Calculate Probability</button>
+
+      <div id="wpCalcResult" style="display: none; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; text-align: center; margin-top: 8px;">
+        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6;">Calculated Win Probability</div>
+        <div id="wpCalcProbability" style="font-size: 22px; font-weight: 900; color: #2ecc71; margin: 6px 0;">50.0%</div>
+        <div id="wpCalcExplanation" style="font-size: 11px; opacity: 0.8; line-height: 1.4;"></div>
+      </div>
+    </div>
+  `;
+}
+
+function calculateLocalWP(game) {
+  const home = game.home_team || game.homeTeam || game.home;
+  const away = game.away_team || game.awayTeam || game.away;
+
+  const homeBall = $("#wpHomeBall").value === "home";
+  const scoreDiff = parseInt($("#wpScoreDiff").value || 0, 10);
+  const down = parseInt($("#wpDown").value || 1, 10);
+  const distance = parseInt($("#wpDistance").value || 10, 10);
+  const yardline = parseInt($("#wpYardline").value || 80, 10);
+  const quarter = parseInt($("#wpQuarter").value || 1, 10);
+  const timeSec = parseInt($("#wpTimeSec").value || 900, 10);
+
+  const totalSecondsRemaining = (4 - quarter) * 900 + timeSec;
+  const tRatio = totalSecondsRemaining / 3600;
+  const sd = 13.5 * Math.sqrt(Math.max(0.01, tRatio)) + 1.2;
+  
+  const possessionAdjustment = homeBall ? 1.5 : -1.5;
+  const fieldPositionAdvantage = ((50 - yardline) / 100) * 2;
+
+  const totalAdvantage = scoreDiff + possessionAdjustment + fieldPositionAdvantage;
+  const zScore = totalAdvantage / sd;
+  
+  const cdf = (z) => 1 / (1 + Math.exp(-1.654 * z));
+  let homeWP = cdf(zScore);
+  
+  homeWP = Math.min(0.999, Math.max(0.001, homeWP));
+  
+  const probPercentage = (homeWP * 100).toFixed(1);
+  const awayPercentage = ((1 - homeWP) * 100).toFixed(1);
+
+  const resultBox = $("#wpCalcResult");
+  const probText = $("#wpCalcProbability");
+  const explanationText = $("#wpCalcExplanation");
+
+  if (resultBox && probText && explanationText) {
+    resultBox.style.display = "block";
+    
+    if (homeWP >= 0.5) {
+      probText.style.color = "#f43f5e";
+      probText.textContent = `${probPercentage}% ${home}`;
+      explanationText.textContent = `${home} has a ${probPercentage}% chance to win in this situation.`;
+    } else {
+      probText.style.color = "#60a5fa";
+      probText.textContent = `${awayPercentage}% ${away}`;
+      explanationText.textContent = `${away} has a ${awayPercentage}% chance to win in this situation.`;
+    }
+  }
+}
+
+// Initialize when DOM is ready
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
