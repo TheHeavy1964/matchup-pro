@@ -1302,26 +1302,26 @@ async function loadFeaturedMatchups() {
       const homeRank = isCFB && home?.curatedRank?.current <= 25 ? `#${home.curatedRank.current} ` : '';
       const awayRank = isCFB && away?.curatedRank?.current <= 25 ? `#${away.curatedRank.current} ` : '';
       const status = evt.status?.type?.shortDetail || '';
-      return `<div class="quick-pick-card" data-team="${homeName}" onclick="document.getElementById('teamInput').value='${homeName}'">
+      return `<div class="quick-pick-card" data-team="${homeName}" onclick="document.getElementById('teamInput').value='${homeName}'; document.getElementById('findBtn').click();">
         <div class="quick-pick-teams">${awayRank}${awayName} vs ${homeRank}${homeName}</div>
         <div class="quick-pick-info">${status}</div>
       </div>`;
     }).join('');
   } catch (e) {
     grid.innerHTML = isCFB ? `
-      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Georgia'">
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Georgia'; document.getElementById('findBtn').click();">
         <div class="quick-pick-teams">Georgia vs Alabama</div>
         <div class="quick-pick-info">SEC • Classic Rivalry</div>
       </div>
-      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Texas'">
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Texas'; document.getElementById('findBtn').click();">
         <div class="quick-pick-teams">Michigan vs Texas</div>
         <div class="quick-pick-info">Big Ten/SEC • Powerhouse</div>
       </div>` : `
-      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Chiefs'">
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Chiefs'; document.getElementById('findBtn').click();">
         <div class="quick-pick-teams">Chiefs vs Ravens</div>
         <div class="quick-pick-info">NFL • Season Kickoff</div>
       </div>
-      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='49ers'">
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='49ers'; document.getElementById('findBtn').click();">
         <div class="quick-pick-teams">49ers vs Jets</div>
         <div class="quick-pick-info">NFL • Monday Night</div>
       </div>`;
