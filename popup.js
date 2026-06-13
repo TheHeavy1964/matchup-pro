@@ -505,15 +505,25 @@ function generateScriptText(game, sportType) {
 async function loadFeaturedMatchups() {
   const grid = $('#featuredMatchups');
   if (!grid) return;
+
+  const sportType = $("#sportType");
+  const sport = sportType ? sportType.value : "cfb";
+  const isCFB = sport === "cfb";
+  const endpoint = isCFB ? '/football/college-football/scoreboard' : '/football/nfl/scoreboard';
+
   try {
-    // Fetch top-25 ranked games from ESPN this week (no key needed)
-    const data = await espnApi('/football/college-football/scoreboard');
+    const data = await espnApi(endpoint);
     const events = data?.events || [];
-    // Prefer games where at least one team is ranked
-    const topGames = events
-      .filter(e => e.competitions?.[0]?.competitors?.some(c => c.curatedRank?.current <= 25))
-      .slice(0, 2);
-    const display = topGames.length >= 2 ? topGames : events.slice(0, 2);
+    
+    let display = [];
+    if (isCFB) {
+      const topGames = events
+        .filter(e => e.competitions?.[0]?.competitors?.some(c => c.curatedRank?.current <= 25))
+        .slice(0, 2);
+      display = topGames.length >= 2 ? topGames : events.slice(0, 2);
+    } else {
+      display = events.slice(0, 2);
+    }
 
     if (display.length === 0) {
       grid.innerHTML = '<div class="quick-pick-card" style="opacity:0.5;font-size:12px;">No games found this week</div>';
@@ -526,8 +536,8 @@ async function loadFeaturedMatchups() {
       const away = comp?.competitors?.find(c => c.homeAway === 'away');
       const homeName = home?.team?.shortDisplayName || home?.team?.displayName || '?';
       const awayName = away?.team?.shortDisplayName || away?.team?.displayName || '?';
-      const homeRank = home?.curatedRank?.current <= 25 ? `#${home.curatedRank.current} ` : '';
-      const awayRank = away?.curatedRank?.current <= 25 ? `#${away.curatedRank.current} ` : '';
+      const homeRank = isCFB && home?.curatedRank?.current <= 25 ? `#${home.curatedRank.current} ` : '';
+      const awayRank = isCFB && away?.curatedRank?.current <= 25 ? `#${away.curatedRank.current} ` : '';
       const status = evt.status?.type?.shortDetail || '';
       return `<div class="quick-pick-card" data-team="${homeName}" onclick="document.getElementById('teamInput').value='${homeName}'">
         <div class="quick-pick-teams">${awayRank}${awayName} vs ${homeRank}${homeName}</div>
@@ -535,15 +545,22 @@ async function loadFeaturedMatchups() {
       </div>`;
     }).join('');
   } catch (e) {
-    // Silently fall back to static cards — don't break the UI
-    grid.innerHTML = `
+    grid.innerHTML = isCFB ? `
       <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Georgia'">
         <div class="quick-pick-teams">Georgia vs Alabama</div>
         <div class="quick-pick-info">SEC • Classic Rivalry</div>
       </div>
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Texas'">
+        <div class="quick-pick-teams">Michigan vs Texas</div>
+        <div class="quick-pick-info">Big Ten/SEC • Powerhouse</div>
+      </div>` : `
       <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='Chiefs'">
-        <div class="quick-pick-teams">Chiefs vs Bills</div>
-        <div class="quick-pick-info">NFL • AFC Showdown</div>
+        <div class="quick-pick-teams">Chiefs vs Ravens</div>
+        <div class="quick-pick-info">NFL • Season Kickoff</div>
+      </div>
+      <div class="quick-pick-card" onclick="document.getElementById('teamInput').value='49ers'">
+        <div class="quick-pick-teams">49ers vs Jets</div>
+        <div class="quick-pick-info">NFL • Monday Night</div>
       </div>`;
   }
 }
@@ -634,6 +651,9 @@ async function initSelectors() {
       if (cfbControls) cfbControls.style.display = isCFB ? "block" : "none";
       if (nflControls) nflControls.style.display = isCFB ? "none" : "block";
       if (teamInput) teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
+      
+      // Reload featured matchups for selected sport
+      loadFeaturedMatchups();
     });
   });
 
