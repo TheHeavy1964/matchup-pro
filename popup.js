@@ -10,8 +10,13 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
     storage: {
       sync: {
         get: (keys) => {
-          const sessionData = sessionStorage.getItem('mockStorage');
-          const data = sessionData ? JSON.parse(sessionData) : mockStorage;
+          const localData = localStorage.getItem('mockStorage');
+          let data;
+          try {
+            data = localData ? JSON.parse(localData) : mockStorage;
+          } catch (e) {
+            data = mockStorage;
+          }
           const result = {};
           if (Array.isArray(keys)) {
             keys.forEach(k => result[k] = data[k]);
@@ -23,10 +28,15 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
           return Promise.resolve(result);
         },
         set: (obj) => {
-          const sessionData = sessionStorage.getItem('mockStorage');
-          const data = sessionData ? JSON.parse(sessionData) : mockStorage;
+          const localData = localStorage.getItem('mockStorage');
+          let data;
+          try {
+            data = localData ? JSON.parse(localData) : mockStorage;
+          } catch (e) {
+            data = mockStorage;
+          }
           Object.assign(data, obj);
-          sessionStorage.setItem('mockStorage', JSON.stringify(data));
+          localStorage.setItem('mockStorage', JSON.stringify(data));
           return Promise.resolve();
         }
       }
@@ -112,14 +122,14 @@ async function attachShareBtnListener() {
           backgroundColor: null // Transparent background from gradient
         }).then(canvas => {
           const link = document.createElement('a');
-          const home = lastGame.homeTeam || lastGame.home_team || 'Home';
-          const away = lastGame.awayTeam || lastGame.away_team || 'Away';
+          const home = lastGame.homeTeam || lastGame.home_team || lastGame.home || 'Home';
+          const away = lastGame.awayTeam || lastGame.away_team || lastGame.away || 'Away';
           link.download = `${home}-vs-${away}-Matchup.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
           shareCardBtn.innerHTML = '✅ Saved Matchup!';
           setTimeout(() => {
-            shareCardBtn.innerHTML = '<span>📸</span> Share Matchup Card';
+            shareCardBtn.innerHTML = '<span>📸</span> Share Card';
             shareCardBtn.disabled = false;
           }, 2000);
         }).catch(err => {
@@ -130,6 +140,26 @@ async function attachShareBtnListener() {
       } else {
         alert('Visual card export library is not loaded.');
       }
+    });
+  }
+
+  const shareTwitterBtn = $("#shareTwitterBtn");
+  if (shareTwitterBtn) {
+    shareTwitterBtn.addEventListener("click", () => {
+      if (!lastGame) return;
+      const home = lastSportType === 'nfl' ? lastGame.homeTeam : (lastGame.home_team || lastGame.homeTeam || lastGame.home || 'Home');
+      const away = lastSportType === 'nfl' ? lastGame.awayTeam : (lastGame.away_team || lastGame.awayTeam || lastGame.away || 'Away');
+      
+      let winner = home;
+      let margin = 3.5;
+      if (window.lastPrediction) {
+        winner = window.lastPrediction.winner;
+        margin = window.lastPrediction.margin;
+      }
+      
+      const tweetText = `My AI Prediction for ${away} vs ${home}: ${winner} by ${Number(margin).toFixed(1)} points! 🏈🔥\n\nAnalyzed on Matchup Pro. Get the extension here:\n👉 https://matchuppro.com`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(twitterUrl, '_blank');
     });
   }
 }
@@ -202,6 +232,176 @@ async function espnApi(path) {
     throw new Error(`ESPN API ${path} failed: ${res.status} ${res.statusText} — ${text}`);
   }
   return res.json();
+}
+
+function getSplitPercentages(valLeft, valRight) {
+  const left = parseFloat(valLeft) || 0;
+  const right = parseFloat(valRight) || 0;
+  if (left === 0 && right === 0) return { left: 50, right: 50 };
+  const total = left + right;
+  const leftPct = Math.round((left / total) * 100);
+  return { left: leftPct, right: 100 - leftPct };
+}
+
+async function getNFLTeamStats(teamAbbr) {
+  try {
+    const currentYear = new Date().getFullYear();
+    const season = new Date().getMonth() < 3 ? currentYear - 1 : currentYear;
+    const stats = await espnApi(`/football/nfl/teams/${teamAbbr.toLowerCase()}/statistics?season=${season}`);
+    const offensive = {};
+    const defensive = {};
+    stats.splits?.categories?.forEach(category => {
+      const isOffense = category.name.toLowerCase().includes('offensive') || 
+                       category.name.toLowerCase().includes('passing') ||
+                       category.name.toLowerCase().includes('rushing');
+      category.stats?.forEach(stat => {
+        const target = isOffense ? offensive : defensive;
+        target[stat.name] = stat.value;
+      });
+    });
+    return { offensive, defensive };
+  } catch (error) {
+    console.warn(`Failed to fetch NFL stats for ${teamAbbr}:`, error);
+    return { offensive: {}, defensive: {} };
+  }
+}
+
+async function getEnhancedRatings(year) {
+  const ratings = {};
+  try {
+    const spData = await api(`/ratings/sp?year=${year}`);
+    spData.forEach(team => {
+      if (!ratings[team.team]) ratings[team.team] = {};
+      ratings[team.team].sp_overall = team.rating;
+      ratings[team.team].sp_offense = team.offense;
+      ratings[team.team].sp_defense = team.defense;
+    });
+  } catch (e) {
+    console.warn('SP+ ratings not available:', e.message);
+  }
+  try {
+    const srsData = await api(`/ratings/srs?year=${year}`);
+    srsData.forEach(team => {
+      if (!ratings[team.team]) ratings[team.team] = {};
+      ratings[team.team].srs = team.rating;
+    });
+  } catch (e) {
+    console.warn('SRS ratings not available:', e.message);
+  }
+  return ratings;
+}
+
+async function getAdvancedSeasonStats(year, team) {
+  const stats = { offense: {}, defense: {} };
+  try {
+    const seasonStats = await api(`/stats/season?year=${year}&team=${encodeURIComponent(team)}`);
+    let games = 1;
+    seasonStats.forEach(stat => {
+      const name = stat.statName || stat.name;
+      const val = parseFloat(stat.statValue || stat.value || stat.stat || 0);
+      if (name === 'games') games = val || 1;
+    });
+    seasonStats.forEach(stat => {
+      const name = stat.statName || stat.name;
+      const val = parseFloat(stat.statValue || stat.value || stat.stat || 0);
+      if (name === 'points') stats.offense.pointsPerGame = val / games;
+      if (name === 'totalYards' || name === 'yards') stats.offense.totalYards = val / games;
+      if (name === 'passingYards') stats.offense.passingYardsPerGame = val / games;
+      if (name === 'rushingYards') stats.offense.rushingYardsPerGame = val / games;
+    });
+  } catch (error) {
+    console.warn(`Failed to fetch basic stats for ${team}:`, error);
+  }
+  try {
+    const advancedStats = await api(`/stats/season/advanced?year=${year}&team=${encodeURIComponent(team)}`);
+    if (advancedStats && advancedStats.length > 0) {
+      const teamStats = advancedStats[0];
+      if (teamStats.offense) {
+        stats.offense.ppa = teamStats.offense.ppa;
+        stats.offense.successRate = teamStats.offense.successRate;
+        stats.offense.explosiveness = teamStats.offense.explosiveness;
+      }
+      if (teamStats.defense) {
+        stats.defense.ppa = teamStats.defense.ppa;
+        stats.defense.successRate = teamStats.defense.successRate;
+        stats.defense.explosiveness = teamStats.defense.explosiveness;
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to fetch advanced stats for ${team}:`, error);
+  }
+  return stats;
+}
+
+async function getBettingLines(year, week, team) {
+  try {
+    const data = await api(`/lines?year=${year}&week=${week}&team=${encodeURIComponent(team)}`);
+    if (!data || !data.length) return null;
+    const gameLines = data[0];
+    const lines = gameLines.lines || [];
+    let bestLine = null;
+    let consensus = { spread: null, total: null, moneyline: null, providers: [] };
+    lines.forEach(line => {
+      if (line.provider) consensus.providers.push(line.provider);
+      const priorityProviders = ['consensus', 'bovada', 'draftkings', 'fanduel'];
+      const isPriority = priorityProviders.includes(line.provider?.toLowerCase());
+      if (!bestLine || isPriority) {
+        bestLine = line;
+      }
+      if (line.spread !== null && consensus.spread === null) consensus.spread = line.spread;
+      if (line.overUnder !== null && consensus.total === null) consensus.total = line.overUnder;
+    });
+    return { ...bestLine, consensus, allLines: lines };
+  } catch (error) {
+    console.warn('Failed to fetch betting lines:', error);
+    return null;
+  }
+}
+
+function predictNFL(game) {
+  const homeRecord = game.homeRecord || "0-0";
+  const awayRecord = game.awayRecord || "0-0";
+  const [homeWins, homeLosses] = homeRecord.split('-').map(Number);
+  const [awayWins, awayLosses] = awayRecord.split('-').map(Number);
+  const homeWinPct = (homeWins + homeLosses > 0) ? homeWins / (homeWins + homeLosses) : 0.5;
+  const awayWinPct = (awayWins + awayLosses > 0) ? awayWins / (awayWins + awayLosses) : 0.5;
+  let homeAdvantage = (homeWinPct - awayWinPct) * 10.0 + 3.0;
+  if (game.odds?.details) {
+    const details = game.odds.details;
+    const spreadMatch = details.match(/([+-]?\d+\.?\d*)/);
+    if (spreadMatch) {
+      const vegasSpread = parseFloat(spreadMatch[1]);
+      homeAdvantage = (homeAdvantage * 0.4) + (vegasSpread * -0.6);
+    }
+  }
+  const winner = homeAdvantage > 0 ? game.homeTeam : game.awayTeam;
+  const margin = Math.abs(homeAdvantage);
+  return {
+    winner,
+    margin,
+    confidence: game.odds ? "High" : "Medium"
+  };
+}
+
+function enhancedPredict(game, ratings, betting) {
+  const home = game.home_team || game.homeTeam;
+  const away = game.away_team || game.awayTeam;
+  const homeRating = ratings[home] || {};
+  const awayRating = ratings[away] || {};
+  const homeScore = homeRating.sp_overall || homeRating.srs || 0;
+  const awayScore = awayRating.sp_overall || awayRating.srs || 0;
+  let homeAdvantage = homeScore - awayScore + 3.0;
+  if (betting?.spread !== null && betting?.spread !== undefined) {
+    const marketPrediction = -betting.spread;
+    homeAdvantage = (homeAdvantage * 0.6) + (marketPrediction * 0.4);
+  }
+  const predictedWinner = homeAdvantage > 0 ? home : away;
+  const predictedMargin = Math.abs(homeAdvantage);
+  return {
+    winner: predictedWinner,
+    margin: predictedMargin,
+    confidence: betting?.spread !== null ? "High" : "Medium"
+  };
 }
 
 async function findNFLGame(team, week) {
@@ -285,7 +485,7 @@ function fmtRecord(record) {
   return record || "—";
 }
 
-function renderNFLSummary(game) {
+function renderNFLSummary(game, homeStats, awayStats, prediction) {
   const spreadText = game.odds?.details || "—";
   const gameDate = new Date(game.date).toLocaleString();
   
@@ -300,54 +500,165 @@ function renderNFLSummary(game) {
     weekDisplay = playoffNames[game.week - 23] || `Playoff Week ${game.week - 22}`;
   }
   
+  // Calculate stats split percentages
+  const homePPG = parseFloat(homeStats?.offensive?.pointsPerGame) || 0;
+  const awayPPG = parseFloat(awayStats?.offensive?.pointsPerGame) || 0;
+  const ppgSplit = getSplitPercentages(homePPG, awayPPG);
+
+  const homeYds = parseFloat(homeStats?.offensive?.totalYards) || 0;
+  const awayYds = parseFloat(awayStats?.offensive?.totalYards) || 0;
+  const ydsSplit = getSplitPercentages(homeYds, awayYds);
+
+  const homePass = parseFloat(homeStats?.offensive?.passingYardsPerGame) || 0;
+  const awayPass = parseFloat(awayStats?.offensive?.passingYardsPerGame) || 0;
+  const passSplit = getSplitPercentages(homePass, awayPass);
+
+  const homeRush = parseFloat(homeStats?.offensive?.rushingYardsPerGame) || 0;
+  const awayRush = parseFloat(awayStats?.offensive?.rushingYardsPerGame) || 0;
+  const rushSplit = getSplitPercentages(homeRush, awayRush);
+
+  // Win probability split
+  const isHomeWinner = prediction.winner === game.homeTeam;
+  const margin = parseFloat(prediction.margin) || 0;
+  const winnerProb = Math.min(99, Math.max(50, Math.round(50 + margin * 2.2)));
+  const loserProb = 100 - winnerProb;
+  const homeProb = isHomeWinner ? winnerProb : loserProb;
+  const awayProb = isHomeWinner ? loserProb : winnerProb;
+
+  const homeAbbr = game.homeAbbr || 'HOME';
+  const awayAbbr = game.awayAbbr || 'AWAY';
+
   return `
-    <div id="matchupCard" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); color: white; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif;">
+    <div id="matchupCard" style="background: linear-gradient(135deg, #120e2e 0%, #1e1136 100%); border-radius: 16px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); color: white; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; gap: 20px;">
       <!-- Watermark background decoration -->
-      <div style="position: absolute; right: -15px; bottom: -15px; font-size: 80px; font-weight: 900; opacity: 0.05; font-style: italic; pointer-events: none;">NFL</div>
+      <div style="position: absolute; right: -15px; bottom: -15px; font-size: 100px; font-weight: 900; opacity: 0.03; font-style: italic; pointer-events: none; z-index: 0;">NFL</div>
       
-      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+      <!-- Teams Header -->
+      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; position: relative; z-index: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 16px;">
         <div style="text-align: left;">
-          <div style="font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Home</div>
-          <div style="font-size: 15px; font-weight: 700;">${game.homeTeam}</div>
-          <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Record: ${fmtRecord(game.homeRecord)}</div>
+          <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Home</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${game.homeTeam}</div>
+          <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">Record: ${fmtRecord(game.homeRecord)}</div>
         </div>
-        <div style="text-align: center; font-weight: bold; font-size: 16px; color: #f39c12; background: rgba(243, 156, 18, 0.15); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(243, 156, 18, 0.3);">VS</div>
+        <div style="text-align: center; font-weight: bold; font-size: 14px; color: #7c3aed; background: rgba(124, 58, 237, 0.12); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(124, 58, 237, 0.25);">VS</div>
         <div style="text-align: right;">
-          <div style="font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Away</div>
-          <div style="font-size: 15px; font-weight: 700;">${game.awayTeam}</div>
-          <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Record: ${fmtRecord(game.awayRecord)}</div>
+          <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Away</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${game.awayTeam}</div>
+          <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">Record: ${fmtRecord(game.awayRecord)}</div>
         </div>
       </div>
-      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.15); font-size: 12px; line-height: 1.6; position: relative; z-index: 1;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">📅 Date:</span> <span><strong>${gameDate}</strong></span>
+
+      <!-- AI Predictor Meter -->
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
+        <div style="text-align: center; margin-bottom: 12px;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor</div>
+          <div style="font-size: 16px; font-weight: 800; color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.2);">${prediction.winner} Projected Winner</div>
+          <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">🏟️ Venue:</span> <span><strong>${game.venue || "TBD"}</strong></span>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
+          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${awayAbbr} ${awayProb}%</span>
+          <span style="font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Win Probability</span>
+          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${homeProb}% ${homeAbbr}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">🏈 Week:</span> <span><strong>${weekDisplay}</strong></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">📊 Line:</span> <span style="color: #f1c40f;"><strong>${spreadText}</strong></span>
+        <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); padding: 1px;">
+          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
         </div>
       </div>
-      <!-- Watermark footer inside card -->
-      <div style="margin-top: 16px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; font-size: 10px; opacity: 0.6; letter-spacing: 1.5px;">
+
+      <!-- Stats Comparison Bars -->
+      <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Offensive Matchup Comparison</div>
+        
+        <!-- PPG -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayPPG)}</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Points Per Game</span>
+            <span style="color: #f43f5e;">${fmt(homePPG)}</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${ppgSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${ppgSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- Total Yards -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayYds, 0)} Yds</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Yards Per Game</span>
+            <span style="color: #f43f5e;">${fmt(homeYds, 0)} Yds</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${ydsSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${ydsSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- Passing -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayPass, 0)} Yds</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Passing Yards</span>
+            <span style="color: #f43f5e;">${fmt(homePass, 0)} Yds</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${passSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${passSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- Rushing -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayRush, 0)} Yds</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Rushing Yards</span>
+            <span style="color: #f43f5e;">${fmt(homeRush, 0)} Yds</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${rushSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${rushSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Details Info Grid -->
+      <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">📅 Game Date:</span> <span style="font-weight: 600;">${gameDate}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">🏟️ Stadium Venue:</span> <span style="font-weight: 600;">${game.venue || "TBD"}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">🏈 Football Week:</span> <span style="font-weight: 600;">${weekDisplay}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">📊 Vegas Spread Line:</span> <span style="font-weight: 600; color: #f59e0b;">${spreadText}</span>
+        </div>
+      </div>
+
+      <!-- Watermark footer -->
+      <div style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
         MATCHUP PRO • SMART FOOTBALL ANALYTICS
       </div>
     </div>
-    <div style="margin-top: 12px;">
-      <button id="shareCardBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; cursor: pointer; transition: all 0.2s; font-size: 13px;">
-        <span>📸</span> Share Matchup Card
+
+    <!-- Share row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+      <button id="shareCardBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: white; cursor: pointer; transition: all 0.25s; font-size: 13px;">
+        <span>📸</span> Share Card
+      </button>
+      <button id="shareTwitterBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 12px; border-radius: 8px; background: #000000; border: 1px solid rgba(255, 255, 255, 0.15); color: white; cursor: pointer; transition: all 0.25s; font-size: 13px;">
+        <span>𝕏</span> Share to X
       </button>
     </div>
     <div id="proPromoContainer"></div>
   `;
 }
 
-function renderCFBSummary(game) {
-  // CFBD API uses snake_case; handle camelCase fallback for future-proofing
+function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, prediction }) {
   const home = game.home_team || game.homeTeam || game.home || null;
   const away = game.away_team || game.awayTeam || game.away || null;
   const gameDate = game.start_date || game.startDate || null;
@@ -355,23 +666,15 @@ function renderCFBSummary(game) {
     ? new Date(gameDate).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
     : '—';
 
-  // Team names missing = season schedule not yet published (e.g. querying a future year)
   if (!home || !away) {
     const now = new Date();
     const activeYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
     const queriedYear = game.season || game.year || '?';
     return `
-      <div style="background:rgba(255,193,7,0.15);border:1px solid rgba(255,193,7,0.5);border-radius:12px;padding:16px;margin-top:16px;">
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px;">&#x26A0;&#xFE0F; Season Data Not Available Yet</div>
-        <div style="font-size:13px;line-height:1.6;">
-          The API found a game slot at <strong>${game.venue || 'this venue'}</strong> for the
-          <strong>${queriedYear}</strong> season, but team names haven't been announced yet.
-        </div>
-        ${Number(queriedYear) > activeYear ? `
-        <div style="margin-top:12px;background:rgba(255,255,255,0.1);border-radius:8px;padding:10px;font-size:12px;">
-          &#x1F4A1; <strong>Tip:</strong> Change the Season to <strong>${activeYear}</strong>
-          to see last season's completed matchups.
-        </div>` : ''}
+      <div style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:12px;padding:16px;margin-top:16px;color:#ffc107;font-size:13px;line-height:1.6;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px;">⚠️ Season Data Not Available Yet</div>
+        <div>The API found a game slot at <strong>${game.venue || 'this venue'}</strong> for the <strong>${queriedYear}</strong> season, but team names haven't been announced yet.</div>
+        ${Number(queriedYear) > activeYear ? `<div style="margin-top:8px;opacity:0.8;">💡 Tip: Change the Season to <strong>${activeYear}</strong> to see last season's completed matchups.</div>` : ''}
       </div>
     `;
   }
@@ -379,50 +682,175 @@ function renderCFBSummary(game) {
   const homePoints = game.home_points != null ? game.home_points : null;
   const awayPoints = game.away_points != null ? game.away_points : null;
   const hasScore = homePoints !== null && awayPoints !== null;
-  const excitement = game.excitement_index ? Number(game.excitement_index).toFixed(1) : null;
+  
+  const spreadText = betting?.formattedSpread || 
+                    (betting?.spread !== undefined ? 
+                     (betting.spread > 0 ? `+${betting.spread}` : `${betting.spread}`) : 
+                     "—");
+  const totalText = betting?.overUnder || "—";
+
+  const homeR = ratings[home] || {};
+  const awayR = ratings[away] || {};
+
+  // Stats split percentages
+  const homePPG = parseFloat(homeStats?.offense?.pointsPerGame) || 0;
+  const awayPPG = parseFloat(awayStats?.offense?.pointsPerGame) || 0;
+  const ppgSplit = getSplitPercentages(homePPG, awayPPG);
+
+  const homeYds = parseFloat(homeStats?.offense?.totalYards) || 0;
+  const awayYds = parseFloat(awayStats?.offense?.totalYards) || 0;
+  const ydsSplit = getSplitPercentages(homeYds, awayYds);
+
+  const homeSR = parseFloat(homeStats?.offense?.successRate) || 0;
+  const awaySR = parseFloat(awayStats?.offense?.successRate) || 0;
+  const srSplit = getSplitPercentages(homeSR, awaySR);
+
+  const homePPA = parseFloat(homeStats?.offense?.ppa) || 0;
+  const awayPPA = parseFloat(awayStats?.offense?.ppa) || 0;
+  const ppaSplit = getSplitPercentages(homePPA, awayPPA);
+
+  // Win probability split
+  const isHomeWinner = prediction.winner === home;
+  const margin = parseFloat(prediction.margin) || 0;
+  const winnerProb = Math.min(99, Math.max(50, Math.round(50 + margin * 2.2)));
+  const loserProb = 100 - winnerProb;
+  const homeProb = isHomeWinner ? winnerProb : loserProb;
+  const awayProb = isHomeWinner ? loserProb : winnerProb;
 
   return `
-    <div id="matchupCard" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); color: white; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif;">
+    <div id="matchupCard" style="background: linear-gradient(135deg, #0b1126 0%, #0f1c3f 100%); border-radius: 16px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); color: white; position: relative; overflow: hidden; font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; gap: 20px;">
       <!-- Watermark background decoration -->
-      <div style="position: absolute; right: -15px; bottom: -15px; font-size: 80px; font-weight: 900; opacity: 0.05; font-style: italic; pointer-events: none;">CFB</div>
+      <div style="position: absolute; right: -15px; bottom: -15px; font-size: 100px; font-weight: 900; opacity: 0.03; font-style: italic; pointer-events: none; z-index: 0;">CFB</div>
       
-      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+      <!-- Teams Header -->
+      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; position: relative; z-index: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 16px;">
         <div style="text-align: left;">
-          <div style="font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Home</div>
-          <div style="font-size: 15px; font-weight: 700;">${home}</div>
-          ${hasScore ? `<div style="font-size: 20px; font-weight: 800; margin-top: 4px; color: #2ecc71;">${homePoints}</div>` : ''}
+          <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Home</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${home}</div>
+          ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${homePoints}</div>` : ''}
+          <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">SP+: ${fmt(homeR.sp_overall)} | SRS: ${fmt(homeR.srs)}</div>
         </div>
-        <div style="text-align: center; font-weight: bold; font-size: 16px; color: #f39c12; background: rgba(243, 156, 18, 0.15); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(243, 156, 18, 0.3);">VS</div>
+        <div style="text-align: center; font-weight: bold; font-size: 14px; color: #7c3aed; background: rgba(124, 58, 237, 0.12); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(124, 58, 237, 0.25); margin-top: ${hasScore ? '-20px' : '0px'}">VS</div>
         <div style="text-align: right;">
-          <div style="font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Away</div>
-          <div style="font-size: 15px; font-weight: 700;">${away}</div>
-          ${hasScore ? `<div style="font-size: 20px; font-weight: 800; margin-top: 4px; color: #2ecc71;">${awayPoints}</div>` : ''}
+          <div style="font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Away</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">${away}</div>
+          ${hasScore ? `<div style="font-size: 24px; font-weight: 900; margin-top: 6px; color: #10b981;">${awayPoints}</div>` : ''}
+          <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; font-weight: 500;">SP+: ${fmt(awayR.sp_overall)} | SRS: ${fmt(awayR.srs)}</div>
         </div>
       </div>
-      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.15); font-size: 12px; line-height: 1.6; position: relative; z-index: 1;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">📅 Date:</span> <span><strong>${formattedDate}</strong></span>
+
+      <!-- AI Predictor Meter -->
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
+        <div style="text-align: center; margin-bottom: 12px;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor</div>
+          <div style="font-size: 16px; font-weight: 800; color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.2);">${prediction.winner} Projected Winner</div>
+          <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
+          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${away} ${awayProb}%</span>
+          <span style="font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Win Probability</span>
+          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${homeProb}% ${home}</span>
+        </div>
+        <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); padding: 1px;">
+          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+        </div>
+      </div>
+
+      <!-- Stats Comparison Bars -->
+      <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Advanced Offensive Matchup</div>
+        
+        <!-- PPG -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayPPG)}</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Points Per Game</span>
+            <span style="color: #f43f5e;">${fmt(homePPG)}</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${ppgSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${ppgSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- Total Yards -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayYds, 0)} Yds</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Yards Per Game</span>
+            <span style="color: #f43f5e;">${fmt(homeYds, 0)} Yds</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${ydsSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${ydsSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- Success Rate -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awaySR * 100, 1)}%</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Success Rate</span>
+            <span style="color: #f43f5e;">${fmt(homeSR * 100, 1)}%</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${srSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${srSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+
+        <!-- PPA (Explosiveness) -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
+            <span style="color: #60a5fa;">${fmt(awayPPA, 2)}</span>
+            <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Predicted Points Added (PPA)</span>
+            <span style="color: #f43f5e;">${fmt(homePPA, 2)}</span>
+          </div>
+          <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="width: ${ppaSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+            <div style="width: ${ppaSplit.right}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Details Info Grid -->
+      <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">📅 Game Date:</span> <span style="font-weight: 600;">${formattedDate}</span>
         </div>
         ${game.venue ? `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">🏟️ Venue:</span> <span><strong>${game.venue}</strong></span>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">🏟️ Stadium Venue:</span> <span style="font-weight: 600;">${game.venue}</span>
         </div>` : ''}
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">🏈 Details:</span> <span><strong>Week ${game.week || '?'} &bull; ${game.season_type || game.seasonType || 'Regular'} Season</strong></span>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">🏈 Game Details:</span> <span style="font-weight: 600;">Week ${game.week || '?'} &bull; ${game.season_type || game.seasonType || 'Regular'} Season</span>
         </div>
-        ${excitement ? `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="opacity:0.8;">⚡ Excitement:</span> <span style="color: #f1c40f;"><strong>${excitement}/10</strong></span>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">📊 Vegas Spread Line:</span> <span style="font-weight: 600; color: #f59e0b;">${spreadText}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">🎯 Over/Under Total:</span> <span style="font-weight: 600; color: #f59e0b;">${totalText}</span>
+        </div>
+        ${game.excitement_index ? `
+        <div style="display: flex; justify-content: space-between;">
+          <span style="opacity: 0.6;">⚡ Game Excitement Index:</span> <span style="font-weight: 600; color: #fbbf24;">${fmt(game.excitement_index, 1)}/10</span>
         </div>` : ''}
       </div>
-      <!-- Watermark footer inside card -->
-      <div style="margin-top: 16px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; font-size: 10px; opacity: 0.6; letter-spacing: 1.5px;">
+
+      <!-- Watermark footer -->
+      <div style="border-top: 1px dashed rgba(255, 255, 255, 0.15); padding-top: 8px; text-align: center; font-size: 9px; opacity: 0.5; letter-spacing: 1.5px; font-weight: 600;">
         MATCHUP PRO • SMART FOOTBALL ANALYTICS
       </div>
     </div>
-    <div style="margin-top: 12px;">
-      <button id="shareCardBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; cursor: pointer; transition: all 0.2s; font-size: 13px;">
-        <span>📸</span> Share Matchup Card
+
+    <!-- Share row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+      <button id="shareCardBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: white; cursor: pointer; transition: all 0.25s; font-size: 13px;">
+        <span>📸</span> Share Card
+      </button>
+      <button id="shareTwitterBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 12px; border-radius: 8px; background: #000000; border: 1px solid rgba(255, 255, 255, 0.15); color: white; cursor: pointer; transition: all 0.25s; font-size: 13px;">
+        <span>𝕏</span> Share to X
       </button>
     </div>
     <div id="proPromoContainer"></div>
@@ -476,28 +904,50 @@ function getCurrentNFLWeek() {
 
 // ─── Podcast Feature: Generate on-air script text ───────────────────────────
 function generateScriptText(game, sportType) {
-  if (sportType === 'nfl') {
-    const home = game.homeTeam;
-    const away = game.awayTeam;
-    const spread = game.odds?.details || null;
-    const venue = game.venue || 'their home stadium';
-    const spreadLine = spread ? ` Vegas has ${spread}.` : '';
-    let weekLabel = '';
-    if (game.week <= 4) weekLabel = `Preseason Week ${game.week}`;
-    else if (game.week <= 22) weekLabel = `Week ${game.week - 4}`;
-    else {
-      const names = ['Wild Card', 'Divisional', 'Conference Championship', 'Super Bowl'];
-      weekLabel = names[game.week - 23] || 'the playoffs';
-    }
-    return `Coming up in ${weekLabel} action: the ${away} travel to ${venue} to take on the ${home}.${spreadLine} This one kicks off ${new Date(game.date).toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}.`;
+  const toneSelect = document.getElementById("scriptTone");
+  const tone = toneSelect ? toneSelect.value : "broadcast";
+
+  const home = sportType === 'nfl' ? game.homeTeam : (game.home_team || game.homeTeam || game.home || 'Home');
+  const away = sportType === 'nfl' ? game.awayTeam : (game.away_team || game.awayTeam || game.away || 'Away');
+  const venue = game.venue || 'their home stadium';
+  const spread = sportType === 'nfl' ? (game.odds?.details || null) : (game.betting?.formattedSpread || null);
+  
+  let dateStr = sportType === 'nfl' ? game.date : (game.start_date || game.startDate);
+  const formattedDate = dateStr 
+    ? new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    : 'this week';
+
+  // Retrieve calculated prediction from window.lastPrediction
+  let winner = home;
+  let margin = 3.5;
+  if (window.lastPrediction) {
+    winner = window.lastPrediction.winner;
+    margin = window.lastPrediction.margin;
+  }
+
+  const marginText = margin ? `${Number(margin).toFixed(1)} points` : 'a close margin';
+
+  if (tone === 'hype') {
+    return `🔥 GET READY FOOTBALL FANS! We have an absolute powerhouse matchup coming down the pipe this ${formattedDate}! The ${away} are rolling into ${venue} ready to tear down the ${home}! The stats are stacked, the energy is through the roof, and our Matchup Pro predictor is calling a massive win for the ${winner} by ${marginText}! You do NOT want to miss this game, set your reminders now! 🏈💥`;
+  } else if (tone === 'trashtalk') {
+    return `🤬 Time to talk some real trash. The ${away} think they can walk into ${venue} and escape with a win? Keep dreaming! The ${home} are ready to lock down their home turf, and the analytical models say the ${winner} are going to absolutely dismantle their opponents by at least ${marginText}. Write it down, screenshot this, and get ready to post those memes on Saturday! 🗑️🤫`;
+  } else if (tone === 'hottake') {
+    return `🌶️ SPICY HOT TAKE TIME! Look, everyone is talking about the spread, but here is the cold hard truth: this matchup between ${away} and ${home} at ${venue} is going to be a total statement game. Forget the noise—Matchup Pro analysis indicates that the ${winner} will dominate and cover the spread, winning by ${marginText}. Lock it in, cash the check, and thank me later! 💵📈`;
   } else {
-    const home = game.home_team || game.homeTeam || 'the home team';
-    const away = game.away_team || game.awayTeam || 'the visitors';
-    const venue = game.venue || 'their home stadium';
-    const dateStr = game.start_date || game.startDate;
-    const dateLabel = dateStr ? new Date(dateStr).toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}) : 'this week';
-    const weekNum = game.week || '?';
-    return `In college football, Week ${weekNum} brings us ${away} at ${home}, kicking off ${dateLabel} at ${venue}. This is a matchup worth watching heading into the weekend.`;
+    // broadcast (default)
+    const spreadLine = spread ? ` Vegas has established a spread of ${spread}.` : '';
+    let weekLabel = '';
+    if (sportType === 'nfl') {
+      if (game.week <= 4) weekLabel = `Preseason Week ${game.week}`;
+      else if (game.week <= 22) weekLabel = `Week ${game.week - 4}`;
+      else {
+        const names = ['Wild Card', 'Divisional', 'Conference Championship', 'Super Bowl'];
+        weekLabel = names[game.week - 23] || 'the playoffs';
+      }
+    } else {
+      weekLabel = `Week ${game.week || '?'}`;
+    }
+    return `🎙️ Welcome to the Matchup Pro broadcast preview. For ${weekLabel} action on ${formattedDate}, we are tracking a highly anticipated contest as the ${away} travel to ${venue} to face the ${home}.${spreadLine} Based on our advanced analytical simulations, the ${winner} are projected to emerge victorious by a margin of ${marginText}. We expect this matchup to key on critical offensive vs defensive efficiency matchups.`;
   }
 }
 
@@ -684,6 +1134,20 @@ async function main() {
   console.log('Popup script loaded');
   
   await initSelectors();
+  
+  // Analytics Dropdown Toggle
+  const dropdownTrigger = $(".dropdown-trigger");
+  const dropdownContent = $(".dropdown-content");
+  if (dropdownTrigger && dropdownContent) {
+    dropdownTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isVisible = dropdownContent.style.display === "block";
+      dropdownContent.style.display = isVisible ? "none" : "block";
+    });
+    document.addEventListener("click", () => {
+      dropdownContent.style.display = "none";
+    });
+  }
 
   // Load dynamic featured matchups in background (no blocker if it fails)
   loadFeaturedMatchups();
@@ -826,11 +1290,20 @@ async function main() {
             return;
           }
 
-          const html = renderNFLSummary(game);
+          // Fetch NFL Stats
+          const [homeStats, awayStats] = await Promise.all([
+            getNFLTeamStats(game.homeAbbr),
+            getNFLTeamStats(game.awayAbbr)
+          ]);
+
+          const prediction = predictNFL(game);
+
+          const html = renderNFLSummary(game, homeStats, awayStats, prediction);
           setOutput(html);
           // Store for Copy Script
           lastGame = game;
           lastSportType = 'nfl';
+          window.lastPrediction = prediction;
           const scriptBtn = $('#copyScriptBtn');
           if (scriptBtn) scriptBtn.disabled = false;
 
@@ -858,21 +1331,35 @@ async function main() {
               return;
             }
 
+            console.log('Fetching CFB ratings and advanced stats...');
+            const home = game.home_team || game.homeTeam || game.home;
+            const away = game.away_team || game.awayTeam || game.away;
+
+            const [ratings, homeStats, awayStats, betting] = await Promise.all([
+              getEnhancedRatings(year),
+              getAdvancedSeasonStats(year, home),
+              getAdvancedSeasonStats(year, away),
+              getBettingLines(year, week, home)
+            ]);
+
+            const prediction = enhancedPredict(game, ratings, betting);
+
             console.log('Rendering CFB summary...');
             try {
-              const html = renderCFBSummary(game);
+              const html = renderCFBSummary({ game, ratings, homeStats, awayStats, betting, prediction });
               console.log('CFB summary rendered successfully');
               setOutput(html);
               // Store for Copy Script
               lastGame = game;
               lastSportType = 'cfb';
+              window.lastPrediction = prediction;
               const scriptBtn = $('#copyScriptBtn');
               if (scriptBtn) scriptBtn.disabled = false;
             } catch (renderError) {
               console.error('Error rendering CFB summary:', renderError);
               // Fallback to basic display without records
-              const home = game.home_team || game.homeTeam;
-              const away = game.away_team || game.awayTeam;
+              const homeName = game.home_team || game.homeTeam;
+              const awayName = game.away_team || game.awayTeam;
               const gameDate = game.start_date || game.startDate;
               const formattedDate = gameDate ? new Date(gameDate).toLocaleString() : "";
               
@@ -881,13 +1368,13 @@ async function main() {
                   <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 16px;">
                     <div>
                       <div style="font-size: 12px; opacity: 0.7;">Home</div>
-                      <div><strong>${home}</strong></div>
+                      <div><strong>${homeName}</strong></div>
                       <div style="font-size: 12px;">Record: Loading...</div>
                     </div>
                     <div style="text-align: center; font-weight: bold; font-size: 20px; opacity: 0.6;">vs</div>
                     <div>
                       <div style="font-size: 12px; opacity: 0.7;">Away</div>
-                      <div><strong>${away}</strong></div>
+                      <div><strong>${awayName}</strong></div>
                       <div style="font-size: 12px;">Record: Loading...</div>
                     </div>
                   </div>
@@ -904,6 +1391,13 @@ async function main() {
             
           } catch (apiError) {
             console.error('CFB API Error:', apiError);
+            // Retrieve key to display prefix for troubleshooting
+            let maskedKey = "None";
+            try {
+              const apiKey = await getApiKey();
+              maskedKey = apiKey ? `${apiKey.substring(0, 5)}...` : "None";
+            } catch (err) {}
+            
             // Show basic game info without records if API fails
             setOutput(`
               <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 16px; margin-top: 16px; border: 1px solid rgba(255, 255, 255, 0.2);">
@@ -913,6 +1407,8 @@ async function main() {
                 </div>
                 <div style="background: rgba(255, 215, 0, 0.2); border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 8px; padding: 12px; font-size: 12px;">
                   <strong>API Error:</strong> ${apiError.message}
+                  <br><br>
+                  <strong>Currently Loaded Key:</strong> <code>${maskedKey}</code>
                   <br><br>
                   <strong>Tip:</strong> Make sure you have configured your CollegeFootballData API key in Settings. Get a free key at collegefootballdata.com
                 </div>

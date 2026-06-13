@@ -1,6 +1,8 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/verify-stripe", "destination": "/api/verify-stripe.js" }
+    { "source": "/api/verify-stripe", "destination": "/api/verify-stripe.js" },
+    { "source": "/options", "destination": "/options.html" },
+    { "source": "/", "destination": "/popup.html" }
   ]
 }

@@ -4,55 +4,72 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CFB Matchup Finder – Options</title>
+    <title>Matchup Pro – Settings</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <h1>Settings</h1>
-    <div class="card">
-      <label for="apiKey">CollegeFootballData API Key</label>
-      <input id="apiKey" type="password" placeholder="Paste your API key here" />
-      <p class="note small">Get a free key at collegefootballdata.com. Your key is stored locally via chrome.storage.</p>
-      <div class="row">
-        <button id="saveBtn">Save</button>
-      </div>
-      <div id="status" class="muted"></div>
-    </div>
-    <div class="card">
-      <h3>Premium Activation (Stripe)</h3>
-      <div id="premiumStatus" class="inactive">
-        Status: Free Version (Inactive)
-      </div>
-      <div id="activationForm">
-        <label for="stripeEmail">Stripe Billing Email</label>
-        <div class="row">
-          <input id="stripeEmail" type="email" placeholder="email@example.com" />
-          <button id="activateBtn">Verify & Activate</button>
+    <div class="background-pattern"></div>
+    <div class="container">
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">🏈</div>
+          <div>
+            <h1>Matchup Pro</h1>
+            <div class="subtitle">Settings & Premium Portal</div>
+          </div>
         </div>
-        <p class="note small" style="margin-top: 4px;">
-          Enter the exact email address used for your Stripe purchase to unlock Pro features.
-        </p>
       </div>
-      <div class="row" style="margin-top: 16px; justify-content: space-between; align-items: center;">
-        <span class="small muted">Need a subscription?</span>
-        <a id="stripeLink" href="https://buy.stripe.com/your-payment-link-here" target="_blank" style="background: #059669; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: 500;">
-          Get Premium Pass
-        </a>
+
+      <div class="card">
+        <h3>CFB Data Connection</h3>
+        <label for="apiKey">CollegeFootballData API Key</label>
+        <input id="apiKey" type="password" placeholder="Paste your API key here" />
+        <p class="note small">Get a free API key at collegefootballdata.com. Key is stored securely on your local browser storage.</p>
+        <div class="row" style="margin-top: 16px;">
+          <button id="saveBtn">Save API Key</button>
+        </div>
+        <div id="status" class="muted"></div>
       </div>
-      <div id="activationStatus" class="muted small" style="margin-top: 8px;"></div>
-    </div>
-    <div class="card">
-      <h3 class="small">Defaults</h3>
-      <div class="row">
-        <label class="small">Default Year</label>
-        <input id="defaultYear" type="number" min="2000" max="2100" />
+
+      <div class="card">
+        <h3>Premium Activation (Stripe)</h3>
+        <div id="premiumStatus" class="inactive">
+          Status: Free Version (Inactive)
+        </div>
+        <div id="activationForm">
+          <label for="stripeEmail">Stripe Billing Email</label>
+          <div class="row">
+            <input id="stripeEmail" type="email" placeholder="email@example.com" />
+            <button id="activateBtn">Verify & Activate</button>
+          </div>
+          <p class="note small" style="margin-top: 6px;">
+            Enter the email address associated with your Stripe purchase to unlock Pro features.
+          </p>
+        </div>
+        <div class="row" style="margin-top: 16px; justify-content: space-between; align-items: center;">
+          <span class="small muted">Need subscription access?</span>
+          <a id="stripeLink" href="https://buy.stripe.com/5kQ14p4VngssagQ1lm24006" target="_blank">
+            Get Premium Pass
+          </a>
+        </div>
+        <div id="activationStatus" class="muted small" style="margin-top: 8px;"></div>
       </div>
-      <div class="row">
-        <label class="small">Default Week (optional)</label>
-        <input id="defaultWeek" type="number" min="0" max="20" />
-      </div>
-      <div class="row">
-        <button id="saveDefaults">Save Defaults</button>
+
+      <div class="card">
+        <h3>Search Defaults</h3>
+        <div class="row flex-row">
+          <div style="flex: 1;">
+            <label for="defaultYear">Default Year</label>
+            <input id="defaultYear" type="number" min="2000" max="2100" />
+          </div>
+          <div style="flex: 1;">
+            <label for="defaultWeek">Default Week (optional)</label>
+            <input id="defaultWeek" type="number" min="1" max="20" />
+          </div>
+        </div>
+        <div class="row" style="margin-top: 16px;">
+          <button id="saveDefaults" class="secondary">Save Defaults</button>
+        </div>
       </div>
     </div>
     <script src="options.js"></script>

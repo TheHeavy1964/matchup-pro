@@ -555,6 +555,34 @@
             font-size: 10px;
             opacity: 0.7;
         }
+        
+        .dropdown-item {
+            display: block;
+            padding: 10px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease-in-out;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: left;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #2ecc71;
+            padding-left: 18px;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+        }
+        .dropdown-trigger:hover {
+            background: rgba(46, 204, 113, 0.25) !important;
+            border-color: rgba(46, 204, 113, 0.5) !important;
+        }
     </style>
 </head>
 <body>
@@ -570,6 +598,30 @@
                 </div>
             </div>
             <div class="premium-badge" id="premiumBadge" style="cursor: pointer; display: none;">Pro</div>
+        </div>
+
+        <!-- Live Streaming & Podcast Analytics Navigation -->
+        <div class="analytics-nav" style="display: flex; gap: 8px; margin-bottom: 16px; position: relative;">
+            <div class="analytics-dropdown">
+                <button class="nav-btn dropdown-trigger" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); color: #2ecc71; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.25s;">
+                    <span>📊</span> Analytics <span style="font-size: 8px; margin-left: 2px; vertical-align: middle;">▼</span>
+                </button>
+                <div class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; width: 230px; background: rgba(26, 26, 36, 0.98); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.6); overflow: hidden; padding: 4px 0;">
+                    <a href="https://collegefootballdata.com/exporter" target="_blank" class="dropdown-item">📥 CFB Data Exporter</a>
+                    <a href="https://collegefootballdata.com/metrics" target="_blank" class="dropdown-item">📈 Team Metrics Explorer</a>
+                    <a href="https://collegefootballdata.com/boxscore" target="_blank" class="dropdown-item">📋 Advanced Box Scores</a>
+                    <a href="https://collegefootballdata.com/wp" target="_blank" class="dropdown-item">📉 Win Probability Chart</a>
+                    <a href="https://collegefootballdata.com/wp/calculator" target="_blank" class="dropdown-item">🧮 Win Probability Calculator</a>
+                    <a href="https://collegefootballdata.com/sp" target="_blank" class="dropdown-item">⚡ SP+ Team Trends</a>
+                    <a href="https://collegefootballdata.com/player/efficiency" target="_blank" class="dropdown-item">👤 Player Efficiency</a>
+                    <a href="https://collegefootballdata.com/passing/trends" target="_blank" class="dropdown-item">↗️ Passing Trends</a>
+                    <a href="https://collegefootballdata.com/ppa" target="_blank" class="dropdown-item">🧮 Predicted Points</a>
+                </div>
+            </div>
+            
+            <a href="https://collegefootballdata.com" target="_blank" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.25s;">
+                <span>🏳️</span> Teams & Games
+            </a>
         </div>
 
         <div class="search-section">
@@ -614,6 +666,17 @@
                 <option value="cfb">College Football</option>
                 <option value="nfl">NFL</option>
             </select>
+
+            <!-- Script Tone Selection -->
+            <div class="control-group" style="margin-top: 12px;">
+                <div class="control-label">🎙️ Podcast Script Tone</div>
+                <select id="scriptTone">
+                    <option value="broadcast">🎙️ Broadcast Style (Professional)</option>
+                    <option value="hype">🔥 Hype Mode (High Energy)</option>
+                    <option value="trashtalk">🤬 Trash Talk (Rivalry Heat)</option>
+                    <option value="hottake">🌶️ Spicy Hot Take (Bold Prediction)</option>
+                </select>
+            </div>
         </div>
 
             <div class="quick-picks">

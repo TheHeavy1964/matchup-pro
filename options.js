@@ -12,9 +12,14 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
       storage: {
         sync: {
           get: (keys) => {
-            // Check session storage to share state across tabs/windows
-            const sessionData = sessionStorage.getItem('mockStorage');
-            const data = sessionData ? JSON.parse(sessionData) : mockStorage;
+            // Check local storage to share state across tabs/windows
+            const localData = localStorage.getItem('mockStorage');
+            let data;
+            try {
+              data = localData ? JSON.parse(localData) : mockStorage;
+            } catch (e) {
+              data = mockStorage;
+            }
             const result = {};
             if (Array.isArray(keys)) {
               keys.forEach(k => result[k] = data[k]);
@@ -26,10 +31,15 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
             return Promise.resolve(result);
           },
           set: (obj) => {
-            const sessionData = sessionStorage.getItem('mockStorage');
-            const data = sessionData ? JSON.parse(sessionData) : mockStorage;
+            const localData = localStorage.getItem('mockStorage');
+            let data;
+            try {
+              data = localData ? JSON.parse(localData) : mockStorage;
+            } catch (e) {
+              data = mockStorage;
+            }
             Object.assign(data, obj);
-            sessionStorage.setItem('mockStorage', JSON.stringify(data));
+            localStorage.setItem('mockStorage', JSON.stringify(data));
             // Trigger storage change handler if any
             return Promise.resolve();
           }

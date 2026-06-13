@@ -19,16 +19,35 @@
 - [x] Add fallback checks for one-time/lifetime sessions.
 - [x] Handle missing API endpoints/data gracefully with fallbacks.
 
-### Milestone 4: Aesthetic Synchronization & Packaging [IN PROGRESS]
-- [ ] Align Options page (`options.html` / `styles.css`) styling with popup's premium glassmorphism theme.
-- [ ] Run end-to-end browser mock validation for Option page actions.
-- [ ] Package the extension as a clean zip file from the root folder.
-- [ ] Confirm Stripe webhook endpoints and complete deployment documentation.
+### Milestone 4: Aesthetic Synchronization & Packaging
+- [x] Align Options page (`options.html` / `styles.css`) styling with popup's premium glassmorphism theme.
+- [x] Run end-to-end browser mock validation for Option page actions.
+- [x] Package the extension as a clean zip file from the root folder.
+- [x] Confirm Stripe webhook endpoints and complete deployment documentation.
+
+### Milestone 5: Visual Matchup Comparison Gauges
+- [x] Implement side-by-side stats comparison grids (Offense vs Defense) for CFB and NFL.
+- [x] Build interactive progress bars/gauges to visually compare team rankings and statistics.
+- [x] Add an AI Confidence meter or Win Probability dial.
+
+### Milestone 6: Script Generator Upgrades & Script Tones
+- [x] Implement a tone selector dropdown (e.g., "Broadcast Script", "Trash Talk", "Hot Take", "Hype").
+- [x] Build dynamic copy templates matching the chosen tone using game stats.
+- [x] Support copying or direct sharing of the generated text.
+
+### Milestone 7: Visual Hype Card Export Themes (Pro)
+- [ ] Add style options to the matchup card (e.g., Classic Dark, Neon Cyberpunk, Gold VIP).
+- [ ] Include customizable labels (e.g., user's prediction score) dynamically rendered by html2canvas.
+- [ ] Add brand watermark options for podcaster/social media sharing.
+
+### Milestone 8: Viral Social Loop
+- [x] Build a "Share to X (Twitter)" button pre-populating game picks and download link.
+- [ ] Add a "Refer a Friend" promo widget offering premium feature tryouts.
 
 ---
 
 ## 🚀 Current Trajectory
-We have successfully switched the working scope to the root folder. The next step is upgrading the visual layout of the settings page (`options.html` styling in `styles.css`) to match the premium aesthetic of the popup, verify the functionality, and compile the final production ZIP file.
+We have successfully resolved options storage persistence across tabs using localStorage, added the glassmorphic live-stream/podcast analytics dropdown navigation menu, and verified the application's clean, error-free load in local browser environment tests.
 
 ---
 
@@ -36,4 +55,4 @@ We have successfully switched the working scope to the root folder. The next ste
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Synchronize markdown files to root, upgrade `styles.css` UI, run browser tests | 🟡 In Progress |
+| **Antigravity** | Verify premium visual dashboards and viral templates in Chrome Extension interface | 🟢 Completed |
