@@ -773,6 +773,26 @@
                 <div id="analyticsBody" style="font-size: 13px; line-height: 1.5; color: white;"></div>
             </div>
             
+            <!-- Teams & Games Explorer Container -->
+            <div id="teamsGamesContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; margin-top: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
+                    <h3 id="teamsGamesTitle" style="font-size: 15px; font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 8px;">🏳️ Teams & Games Explorer</h3>
+                    <button id="closeTeamsGamesBtn" style="background: none; border: none; color: rgba(255,255,255,0.5); font-size: 16px; cursor: pointer; padding: 4px; transition: all 0.2s; outline: none;">✕</button>
+                </div>
+                
+                <!-- Filter Search Input inside Panel -->
+                <div style="margin-bottom: 12px; position: relative;">
+                    <input type="text" id="teamsFilterInput" placeholder="Filter teams by name or abbreviation..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 12px; outline: none; box-sizing: border-box;">
+                </div>
+
+                <div id="teamsGamesLoader" style="display: none; text-align: center; padding: 20px 0;">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 8px;"></div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 8px; color: white;">Loading team rosters...</div>
+                </div>
+                
+                <div id="teamsGamesBody" style="font-size: 13px; line-height: 1.5; color: white; max-height: 320px; overflow-y: auto; padding-right: 4px;"></div>
+            </div>
+            
             <!-- Referral Widget -->
             <div id="referralWidget" class="referral-box"></div>
 

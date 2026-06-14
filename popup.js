@@ -1812,6 +1812,7 @@ async function main() {
 
   // Initialize analytics dropdown for the default sport
   updateAnalyticsDropdown("cfb");
+  initTeamsGamesExplorer();
 
   console.log('Event listeners set up');
 }
@@ -1836,6 +1837,191 @@ function showLocalAnalyticsMessage(title, message) {
     `;
   }
   if (container) container.scrollIntoView({ behavior: "smooth" });
+}
+
+let allCachedTeams = [];
+
+function initTeamsGamesExplorer() {
+  const teamsGamesBtn = $("#teamsGamesBtn");
+  const closeTeamsGamesBtn = $("#closeTeamsGamesBtn");
+  const teamsGamesContainer = $("#teamsGamesContainer");
+  const teamsFilterInput = $("#teamsFilterInput");
+  
+  if (closeTeamsGamesBtn && teamsGamesContainer) {
+    closeTeamsGamesBtn.addEventListener("click", () => {
+      teamsGamesContainer.style.display = "none";
+    });
+  }
+  
+  if (teamsGamesBtn) {
+    // Clone and replace to prevent duplicate listeners
+    const newBtn = teamsGamesBtn.cloneNode(true);
+    teamsGamesBtn.parentNode.replaceChild(newBtn, teamsGamesBtn);
+    
+    newBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const currentSport = $("#sportType")?.value || "cfb";
+      console.log("Teams & Games Explorer opened for sport:", currentSport);
+      
+      // Hide analytics container if open
+      const analyticsContainer = $("#analyticsContainer");
+      if (analyticsContainer) analyticsContainer.style.display = "none";
+      
+      // Show container and loading
+      teamsGamesContainer.style.display = "block";
+      const loaderEl = $("#teamsGamesLoader");
+      const bodyEl = $("#teamsGamesBody");
+      
+      if (loaderEl) loaderEl.style.display = "block";
+      if (bodyEl) {
+        bodyEl.style.display = "none";
+        bodyEl.innerHTML = "";
+      }
+      
+      const currentFilterInput = $("#teamsFilterInput");
+      if (currentFilterInput) currentFilterInput.value = "";
+      
+      teamsGamesContainer.scrollIntoView({ behavior: "smooth" });
+      
+      try {
+        let teams = [];
+        if (currentSport === "cfb") {
+          // Fetch FBS teams from CFBD API
+          const apiKey = await getApiKey();
+          const year = $("#year")?.value || new Date().getFullYear();
+          const res = await fetch(`https://api.collegefootballdata.com/teams/fbs?year=${year}`, {
+            headers: { Authorization: `Bearer ${apiKey}` }
+          });
+          if (!res.ok) throw new Error(`API returned ${res.status}`);
+          teams = await res.json();
+          
+          // Map to standard format
+          allCachedTeams = teams.map(t => ({
+            id: t.id,
+            name: t.school,
+            abbreviation: t.abbreviation,
+            logo: t.logos?.[0] || "",
+            conference: t.conference || "FBS Independent"
+          })).sort((a, b) => a.name.localeCompare(b.name));
+        } else {
+          // Fetch NFL teams from ESPN API
+          const data = await espnApi(`/football/nfl/teams`);
+          const rawTeams = data?.sports?.[0]?.leagues?.[0]?.teams || [];
+          
+          allCachedTeams = rawTeams.map(item => {
+            const t = item.team;
+            return {
+              id: t.id,
+              name: t.displayName,
+              abbreviation: t.abbreviation,
+              logo: t.logos?.[0]?.href || "",
+              conference: t.abbreviation // display abbreviation
+            };
+          }).sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
+        renderTeamsGrid(allCachedTeams);
+        
+        if (bodyEl) bodyEl.style.display = "block";
+        if (loaderEl) loaderEl.style.display = "none";
+      } catch (err) {
+        console.error("Error loading teams roster:", err);
+        if (bodyEl) {
+          bodyEl.innerHTML = `<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 12px; color: #fff;">Error loading teams: ${err.message}</div>`;
+          bodyEl.style.display = "block";
+        }
+        if (loaderEl) loaderEl.style.display = "none";
+      }
+    });
+  }
+  
+  if (teamsFilterInput) {
+    // Rebind to avoid duplicate listeners
+    const newInput = teamsFilterInput.cloneNode(true);
+    teamsFilterInput.parentNode.replaceChild(newInput, teamsFilterInput);
+    
+    newInput.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const filtered = allCachedTeams.filter(t => 
+        t.name.toLowerCase().includes(query) || 
+        t.abbreviation.toLowerCase().includes(query) || 
+        (t.conference && t.conference.toLowerCase().includes(query))
+      );
+      renderTeamsGrid(filtered);
+    });
+  }
+}
+
+function renderTeamsGrid(teamsList) {
+  const bodyEl = $("#teamsGamesBody");
+  if (!bodyEl) return;
+  
+  if (teamsList.length === 0) {
+    bodyEl.innerHTML = `<div style="opacity:0.7;text-align:center;padding:20px 0;">No matching teams found.</div>`;
+    return;
+  }
+  
+  // Render teams in a clean grid
+  let html = `
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 4px 0;">
+  `;
+  
+  teamsList.forEach(t => {
+    const logoHtml = t.logo 
+      ? `<img src="${t.logo}" style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;" alt="${t.name}">`
+      : `<div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); margin-right: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold;">${t.abbreviation}</div>`;
+      
+    html += `
+      <div class="team-explorer-card" data-name="${t.name}" style="display: flex; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none;">
+        ${logoHtml}
+        <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
+          <span style="font-weight: 600; font-size: 11px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${t.name}</span>
+          <span style="font-size: 8px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${t.conference}</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  bodyEl.innerHTML = html;
+  
+  // Add hover effects and click listeners
+  const cards = bodyEl.querySelectorAll(".team-explorer-card");
+  cards.forEach(card => {
+    card.addEventListener("mouseenter", () => {
+      card.style.background = "rgba(255,255,255,0.1)";
+      card.style.borderColor = "rgba(255,255,255,0.2)";
+      card.style.transform = "translateY(-1px)";
+    });
+    card.addEventListener("mouseleave", () => {
+      card.style.background = "rgba(255,255,255,0.04)";
+      card.style.borderColor = "rgba(255,255,255,0.08)";
+      card.style.transform = "none";
+    });
+    
+    card.addEventListener("click", () => {
+      const teamName = card.dataset.name;
+      const teamInput = $("#teamInput");
+      const findBtn = $("#findBtn") || $("#searchBtn");
+      
+      if (teamInput) {
+        teamInput.value = teamName;
+        // Trigger input event to clear options
+        teamInput.dispatchEvent(new Event('input'));
+      }
+      
+      // Close the explorer
+      const teamsGamesContainer = $("#teamsGamesContainer");
+      if (teamsGamesContainer) teamsGamesContainer.style.display = "none";
+      
+      // Perform search
+      if (findBtn) {
+        findBtn.click();
+      }
+    });
+  });
 }
 
 function updateAnalyticsDropdown(sport) {
