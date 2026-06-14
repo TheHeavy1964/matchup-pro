@@ -52,11 +52,34 @@
 - [x] Sort and present player efficiency/performance leaderboards from `/ppa/players/season` (CFB) and game leaders (NFL).
 - [x] Implement a CSV Data Exporter downloading seasonal SP+ team rankings.
 - [x] Build an interactive normal distribution-based Situation Win Probability Calculator.
+- [x] Integrate "Team Metrics Explorer" in-app (using `/stats/season/advanced` stats side-by-side comparison).
+- [x] Integrate "Passing Trends" in-app (comparing QB passing PPA stats side-by-side using `/ppa/players/season`).
+- [x] Integrate "Predicted Points" (Predicted Scoring) in-app (building an interactive expected points situation calculator on a virtual football field).
+- [x] Add Help hover buttons with detailed terminology guides to all in-app analytics views.
+
+---
+
+### Milestone 10: Players & Injuries Explorer
+- [x] Integrate "Players" navigation tab in Matchup Pro popup.
+- [x] Develop internal "Roster & Injuries" Explorer panel with premium glassmorphic styling.
+- [x] Map full NFL team names to ESPN API team IDs for live roster and injury feeds.
+- [x] Implement robust API mapping fallback to handle CFB injuries gracefully with roster-based simulation (bypassing missing API endpoints).
+- [x] Handle API key invalidity or Cloudflare challenge HTML responses safely to prevent JSON parsing crashes.
+- [x] Add search filters to query roster list by player name or position group.
+
+---
+
+### Milestone 11: Production Sync & Data Consistency
+- [x] Resolve PPG metric mapping bug (supporting both `points` and `scoring` keys).
+- [x] Implement robust prior-season fallback (`year - 1`) for college football and NFL stats retrieval.
+- [x] Generate and deploy premium 1200x630 Open Graph Image (OGI) at `/og-image.png`.
+- [x] Add descriptive SEO meta tags, Open Graph, and Twitter card preview elements to all page headers.
+- [x] Synchronize chrome extension build and Vercel SaaS deployment via origin repository sync.
 
 ---
 
 ## 🚀 Current Trajectory
-We have successfully implemented a fully contextual, premium advanced analytics dashboard directly inside the extension popup for both College Football and NFL. Clicks on the top "Analytics" dropdown are intercepted and query live CFB and ESPN NFL APIs to render beautiful glassmorphic analytics sub-panels: Advanced Box Scores, SVG Win Probability flows, SP+ Team Trends, Player Performance leaderboards, a downloadable CSV Data Exporter for SP+ rankings, and a situation-based live Win Probability Calculator.
+We are performing the final Git push to origin/main to trigger automatic Vercel redeployment. This will synchronize the local Chrome Extension changes (in-app analytics panels) with the live Vercel SaaS app, correcting the tab-opening behavior on Vercel and updating all data display and Open Graph preview configurations.
 
 ---
 
@@ -64,4 +87,5 @@ We have successfully implemented a fully contextual, premium advanced analytics 
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Implement NFL analytics parity (Box Scores, Player Performance, Win Probability Chart) and enable Analytics dropdown for NFL | 🟢 Completed |
+| **Antigravity** | Implement PPG mapping fix, NFL/CFB season fallback, SEO/OGI meta tags, rebuild zip, and push to Vercel | 🟢 Completed |
+
