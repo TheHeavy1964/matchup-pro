@@ -956,13 +956,13 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
           <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
-          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${awayAbbr} ${awayProb}%</span>
+          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${homeAbbr} ${homeProb}%</span>
           <span style="font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Win Probability</span>
-          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${homeProb}% ${homeAbbr}</span>
+          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${awayProb}% ${awayAbbr}</span>
         </div>
         <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); padding: 1px;">
-          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
-          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
         </div>
       </div>
 
@@ -973,9 +973,9 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         <!-- PPG -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayPPG)}</span>
+            <span style="color: #60a5fa;">${fmt(homePPG)}</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Points Per Game</span>
-            <span style="color: #f43f5e;">${fmt(homePPG)}</span>
+            <span style="color: #f43f5e;">${fmt(awayPPG)}</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${ppgSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -986,9 +986,9 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         <!-- Total Yards -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayYds, 0)} Yds</span>
+            <span style="color: #60a5fa;">${fmt(homeYds, 0)} Yds</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Yards Per Game</span>
-            <span style="color: #f43f5e;">${fmt(homeYds, 0)} Yds</span>
+            <span style="color: #f43f5e;">${fmt(awayYds, 0)} Yds</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${ydsSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -999,9 +999,9 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         <!-- Passing -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayPass, 0)} Yds</span>
+            <span style="color: #60a5fa;">${fmt(homePass, 0)} Yds</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Passing Yards</span>
-            <span style="color: #f43f5e;">${fmt(homePass, 0)} Yds</span>
+            <span style="color: #f43f5e;">${fmt(awayPass, 0)} Yds</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${passSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -1012,9 +1012,9 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
         <!-- Rushing -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayRush, 0)} Yds</span>
+            <span style="color: #60a5fa;">${fmt(homeRush, 0)} Yds</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Rushing Yards</span>
-            <span style="color: #f43f5e;">${fmt(homeRush, 0)} Yds</span>
+            <span style="color: #f43f5e;">${fmt(awayRush, 0)} Yds</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${rushSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -1179,13 +1179,13 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
           <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
-          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${away} ${awayProb}%</span>
+          <span style="color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 6px; border-radius: 4px;">${home} ${homeProb}%</span>
           <span style="font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Win Probability</span>
-          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${homeProb}% ${home}</span>
+          <span style="color: #f43f5e; background: rgba(244,63,94,0.1); padding: 2px 6px; border-radius: 4px;">${awayProb}% ${away}</span>
         </div>
         <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); padding: 1px;">
-          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
-          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
+          <div style="width: ${homeProb}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
+          <div style="width: ${awayProb}%; background: linear-gradient(90deg, #f43f5e, #ec4899); border-radius: 0 3px 3px 0;"></div>
         </div>
       </div>
 
@@ -1196,9 +1196,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
         <!-- PPG -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayPPG)}</span>
+            <span style="color: #60a5fa;">${fmt(homePPG)}</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Points Per Game</span>
-            <span style="color: #f43f5e;">${fmt(homePPG)}</span>
+            <span style="color: #f43f5e;">${fmt(awayPPG)}</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${ppgSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -1209,9 +1209,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
         <!-- Total Yards -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayYds, 0)} Yds</span>
+            <span style="color: #60a5fa;">${fmt(homeYds, 0)} Yds</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Yards Per Game</span>
-            <span style="color: #f43f5e;">${fmt(homeYds, 0)} Yds</span>
+            <span style="color: #f43f5e;">${fmt(awayYds, 0)} Yds</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${ydsSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -1222,9 +1222,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
         <!-- Success Rate -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awaySR * 100, 1)}%</span>
+            <span style="color: #60a5fa;">${fmt(homeSR * 100, 1)}%</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Success Rate</span>
-            <span style="color: #f43f5e;">${fmt(homeSR * 100, 1)}%</span>
+            <span style="color: #f43f5e;">${fmt(awaySR * 100, 1)}%</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${srSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -1235,9 +1235,9 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
         <!-- PPA (Explosiveness) -->
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 600;">
-            <span style="color: #60a5fa;">${fmt(awayPPA, 2)}</span>
+            <span style="color: #60a5fa;">${fmt(homePPA, 2)}</span>
             <span style="opacity: 0.7; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Predicted Points Added (PPA)</span>
-            <span style="color: #f43f5e;">${fmt(homePPA, 2)}</span>
+            <span style="color: #f43f5e;">${fmt(awayPPA, 2)}</span>
           </div>
           <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; display: flex; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
             <div style="width: ${ppaSplit.left}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px 0 0 3px;"></div>
@@ -2321,9 +2321,13 @@ async function loadTeamRosterAndInjuries(teamName, sport) {
     if (sport === "cfb") {
       const year = $("#year")?.value || new Date().getFullYear();
       
-      const rosterData = await api(`/roster?team=${encodeURIComponent(teamName)}&year=${year}`);
+      let rosterData = await api(`/roster?team=${encodeURIComponent(teamName)}&year=${year}`);
+      if (!rosterData || rosterData.length === 0) {
+        console.log(`[CFBD] No roster found for ${teamName} in ${year}. Trying fallback to ${year - 1}`);
+        rosterData = await api(`/roster?team=${encodeURIComponent(teamName)}&year=${year - 1}`);
+      }
       
-      currentRosterPlayers = rosterData.map(p => ({
+      currentRosterPlayers = (rosterData || []).map(p => ({
         name: `${p.firstName || p.first_name || ""} ${p.lastName || p.last_name || ""}`.trim() || "Player",
         jersey: p.jersey !== null && p.jersey !== undefined ? p.jersey : "-",
         position: p.position || "-",
