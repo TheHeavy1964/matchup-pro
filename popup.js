@@ -295,7 +295,7 @@ const NFL_TEAMS = {
   'seahawks': 'SEA', 'seattle': 'SEA',
   'buccaneers': 'TB', 'tampa bay': 'TB',
   'titans': 'TEN', 'tennessee': 'TEN',
-  'commanders': 'WAS', 'washington': 'WAS'
+  'commanders': 'WSH', 'washington': 'WSH'
 };
 
 function normalizeNFLTeamName(input) {
@@ -498,13 +498,16 @@ async function getNFLTeamStats(teamAbbr, season) {
     const stats = await espnApi(`/football/nfl/teams/${teamAbbr.toLowerCase()}/statistics?season=${season}`);
     const offensive = {};
     const defensive = {};
-    stats.splits?.categories?.forEach(category => {
+    const categories = stats.results?.stats?.categories || stats.splits?.categories || [];
+    categories.forEach(category => {
       const isOffense = category.name.toLowerCase().includes('offensive') || 
                        category.name.toLowerCase().includes('passing') ||
                        category.name.toLowerCase().includes('rushing');
       category.stats?.forEach(stat => {
         const target = isOffense ? offensive : defensive;
         target[stat.name] = stat.value;
+        if (stat.name === 'totalPointsPerGame') target['pointsPerGame'] = stat.value;
+        if (stat.name === 'yardsPerGame') target['totalYards'] = stat.value;
       });
     });
     return { offensive, defensive };
@@ -1417,7 +1420,8 @@ async function initSelectors() {
       if (nflWeekContainer) nflWeekContainer.style.display = isCFB ? "none" : "block";
       if (cfbSeasonTypeContainer) cfbSeasonTypeContainer.style.display = isCFB ? "block" : "none";
       if (teamInput) teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
-      if (analyticsNav) analyticsNav.style.display = isCFB ? "flex" : "none";
+      if (analyticsNav) analyticsNav.style.display = "flex";
+      updateAnalyticsDropdown(sport);
       
       // Reload featured matchups for selected sport
       loadFeaturedMatchups();
@@ -1806,91 +1810,8 @@ async function main() {
     });
   }
 
-  const dropdownItems = document.querySelectorAll(".dropdown-item");
-  dropdownItems.forEach(item => {
-    item.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const dropdownContent = $(".dropdown-content");
-      if (dropdownContent) dropdownContent.style.display = "none"; // Hide dropdown
-
-      const label = item.textContent.trim().substring(2).trim(); // Strip emoji
-      const href = item.getAttribute("href");
-
-      console.log("Analytics clicked:", label);
-
-      // Verify we have a loaded CFB game
-      if (!lastGame || lastSportType !== "cfb") {
-        showLocalAnalyticsMessage("⚠️ Analytics Context Required", `Please search for a College Football matchup first (e.g. "Georgia") before running advanced analytics.`);
-        return;
-      }
-
-      // Show container and loader
-      analyticsContainer.style.display = "block";
-      const titleEl = $("#analyticsTitle");
-      if (titleEl) titleEl.textContent = `📈 ${label}`;
-      
-      const loaderEl = $("#analyticsLoader");
-      const bodyEl = $("#analyticsBody");
-      if (loaderEl) loaderEl.style.display = "block";
-      if (bodyEl) {
-        bodyEl.style.display = "none";
-        bodyEl.innerHTML = "";
-      }
-
-      analyticsContainer.scrollIntoView({ behavior: "smooth" });
-
-      try {
-        let contentHtml = "";
-
-        if (label.includes("Box Scores")) {
-          contentHtml = await renderDetailedBoxScore(lastGame);
-        } else if (label.includes("Win Probability Chart")) {
-          contentHtml = await renderWinProbabilityChart(lastGame);
-        } else if (label.includes("SP+ Team Trends")) {
-          contentHtml = await renderSPTeamTrends(lastGame);
-        } else if (label.includes("Player Efficiency")) {
-          contentHtml = await renderPlayerEfficiency(lastGame);
-        } else if (label.includes("Data Exporter")) {
-          await runDataExporter(lastGame);
-          contentHtml = `
-            <div style="background: rgba(39, 174, 96, 0.15); border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 8px; padding: 12px; text-align: center; color: #2ecc71;">
-              <strong>Success!</strong> CSV spreadsheet containing SP+ ratings for the ${lastGame.season || new Date().getFullYear()} season has been compiled and downloaded. Check your Downloads folder.
-            </div>
-          `;
-        } else if (label.includes("Win Probability Calculator")) {
-          contentHtml = renderWPLocalCalculator(lastGame);
-        } else {
-          // Fallback: open external link in new tab
-          window.open(href, "_blank");
-          analyticsContainer.style.display = "none";
-          return;
-        }
-
-        if (bodyEl) {
-          bodyEl.innerHTML = contentHtml;
-          bodyEl.style.display = "block";
-          if (loaderEl) loaderEl.style.display = "none";
-          
-          // Hook up calculate button if win probability calculator is rendered
-          const calcBtn = $("#localCalcBtn");
-          if (calcBtn) {
-            calcBtn.addEventListener("click", () => {
-              calculateLocalWP(lastGame);
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Analytics fetch error:", err);
-        if (bodyEl) {
-          bodyEl.innerHTML = `<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 12px; color: #fff;">Error loading analytics: ${err.message}</div>`;
-          bodyEl.style.display = "block";
-        }
-        if (loaderEl) loaderEl.style.display = "none";
-      }
-    });
-  });
+  // Initialize analytics dropdown for the default sport
+  updateAnalyticsDropdown("cfb");
 
   console.log('Event listeners set up');
 }
@@ -1917,6 +1838,152 @@ function showLocalAnalyticsMessage(title, message) {
   if (container) container.scrollIntoView({ behavior: "smooth" });
 }
 
+function updateAnalyticsDropdown(sport) {
+  const isCFB = sport === "cfb";
+  const dropdownContent = document.querySelector(".analytics-dropdown .dropdown-content");
+  if (!dropdownContent) return;
+  
+  if (isCFB) {
+    dropdownContent.innerHTML = `
+      <a href="https://collegefootballdata.com/exporter" target="_blank" class="dropdown-item">📥 CFB Data Exporter</a>
+      <a href="https://collegefootballdata.com/metrics/season" target="_blank" class="dropdown-item">📈 Team Metrics Explorer</a>
+      <a href="https://collegefootballdata.com/boxscore" target="_blank" class="dropdown-item">📋 Advanced Box Scores</a>
+      <a href="https://collegefootballdata.com/wp" target="_blank" class="dropdown-item">📉 Win Probability Chart</a>
+      <a href="https://collegefootballdata.com/win-probability" target="_blank" class="dropdown-item">🧮 Win Probability Calculator</a>
+      <a href="https://collegefootballdata.com/sp/trends" target="_blank" class="dropdown-item">⚡ SP+ Team Trends</a>
+      <a href="https://collegefootballdata.com/ppa/usage" target="_blank" class="dropdown-item">👤 Player Efficiency</a>
+      <a href="https://collegefootballdata.com/ppa/passing/cumulative" target="_blank" class="dropdown-item">↗️ Passing Trends</a>
+      <a href="https://collegefootballdata.com/predictedpoints" target="_blank" class="dropdown-item">🧮 Predicted Points</a>
+    `;
+  } else {
+    dropdownContent.innerHTML = `
+      <a href="https://www.espn.com/nfl/stats" target="_blank" class="dropdown-item">📈 NFL Leaderboard</a>
+      <a href="https://www.espn.com/nfl/standings" target="_blank" class="dropdown-item">🏆 NFL Standings</a>
+      <a href="#" class="dropdown-item">📋 Advanced Box Scores</a>
+      <a href="#" class="dropdown-item">📉 Win Probability Chart</a>
+      <a href="#" class="dropdown-item">🧮 Win Probability Calculator</a>
+      <a href="#" class="dropdown-item">👤 Player Performance</a>
+    `;
+  }
+  
+  bindAnalyticsDropdownListeners();
+}
+
+function bindAnalyticsDropdownListeners() {
+  const analyticsContainer = $("#analyticsContainer");
+  const dropdownItems = document.querySelectorAll(".dropdown-item");
+  
+  dropdownItems.forEach(item => {
+    // Clone node to clear existing listeners
+    const newItem = item.cloneNode(true);
+    item.parentNode.replaceChild(newItem, item);
+    
+    newItem.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const dropdownContent = $(".dropdown-content");
+      if (dropdownContent) dropdownContent.style.display = "none"; // Hide dropdown
+
+      const label = newItem.textContent.trim().substring(2).trim(); // Strip emoji
+      const href = newItem.getAttribute("href");
+
+      console.log("Analytics clicked:", label);
+
+      const currentSport = $("#sportType")?.value || "cfb";
+
+      // Verify we have a loaded game of the correct sport
+      if (!lastGame || lastSportType !== currentSport) {
+        const sportLabel = currentSport === "cfb" ? "College Football" : "NFL";
+        showLocalAnalyticsMessage("⚠️ Analytics Context Required", `Please search for a ${sportLabel} matchup first before running advanced analytics.`);
+        return;
+      }
+
+      // Show container and loader
+      analyticsContainer.style.display = "block";
+      const titleEl = $("#analyticsTitle");
+      if (titleEl) titleEl.textContent = `📈 ${label}`;
+      
+      const loaderEl = $("#analyticsLoader");
+      const bodyEl = $("#analyticsBody");
+      if (loaderEl) loaderEl.style.display = "block";
+      if (bodyEl) {
+        bodyEl.style.display = "none";
+        bodyEl.innerHTML = "";
+      }
+
+      analyticsContainer.scrollIntoView({ behavior: "smooth" });
+
+      try {
+        let contentHtml = "";
+
+        if (currentSport === "cfb") {
+          if (label.includes("Box Scores")) {
+            contentHtml = await renderDetailedBoxScore(lastGame);
+          } else if (label.includes("Win Probability Chart")) {
+            contentHtml = await renderWinProbabilityChart(lastGame);
+          } else if (label.includes("SP+ Team Trends")) {
+            contentHtml = await renderSPTeamTrends(lastGame);
+          } else if (label.includes("Player Efficiency")) {
+            contentHtml = await renderPlayerEfficiency(lastGame);
+          } else if (label.includes("Data Exporter")) {
+            await runDataExporter(lastGame);
+            contentHtml = `
+              <div style="background: rgba(39, 174, 96, 0.15); border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 8px; padding: 12px; text-align: center; color: #2ecc71;">
+                <strong>Success!</strong> CSV spreadsheet containing SP+ ratings for the ${lastGame.season || new Date().getFullYear()} season has been compiled and downloaded. Check your Downloads folder.
+              </div>
+            `;
+          } else if (label.includes("Win Probability Calculator")) {
+            contentHtml = renderWPLocalCalculator(lastGame);
+          } else {
+            // Fallback: open external link in new tab
+            window.open(href, "_blank");
+            analyticsContainer.style.display = "none";
+            return;
+          }
+        } else {
+          // NFL Analytics
+          if (label.includes("Box Scores")) {
+            contentHtml = await renderNFLDetailedBoxScore(lastGame);
+          } else if (label.includes("Win Probability Chart")) {
+            contentHtml = await renderWinProbabilityChart(lastGame);
+          } else if (label.includes("Player Performance")) {
+            contentHtml = await renderNFLPlayerEfficiency(lastGame);
+          } else if (label.includes("Win Probability Calculator")) {
+            contentHtml = renderWPLocalCalculator(lastGame);
+          } else {
+            // Fallback: open external link in new tab
+            window.open(href, "_blank");
+            analyticsContainer.style.display = "none";
+            return;
+          }
+        }
+
+        if (bodyEl) {
+          bodyEl.innerHTML = contentHtml;
+          bodyEl.style.display = "block";
+          if (loaderEl) loaderEl.style.display = "none";
+          
+          // Hook up calculate button if win probability calculator is rendered
+          const calcBtn = $("#localCalcBtn");
+          if (calcBtn) {
+            calcBtn.addEventListener("click", () => {
+              calculateLocalWP(lastGame);
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Analytics fetch error:", err);
+        if (bodyEl) {
+          bodyEl.innerHTML = `<div style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); border-radius: 8px; padding: 12px; color: #fff;">Error loading analytics: ${err.message}</div>`;
+          bodyEl.style.display = "block";
+        }
+        if (loaderEl) loaderEl.style.display = "none";
+      }
+    });
+  });
+}
+
 async function getAdvancedBoxScore(gameId) {
   const apiKey = await getApiKey();
   const res = await fetch(`${API_BASE}/game/box/advanced?id=${gameId}`, {
@@ -1933,6 +2000,20 @@ async function getWinProbabilityData(gameId) {
   });
   if (!res.ok) throw new Error(`API returned ${res.status}`);
   return res.json();
+}
+
+async function getNFLWinProbabilityData(gameId) {
+  try {
+    const summary = await espnApi(`/football/nfl/summary?event=${gameId}`);
+    if (!summary.winprobability) return [];
+    return summary.winprobability.map((p, index) => ({
+      playNumber: index + 1,
+      homeWinProbability: p.homeWinPercentage
+    }));
+  } catch (error) {
+    console.warn("Error fetching NFL win probability:", error);
+    return [];
+  }
 }
 
 async function getTeamSPHistory(team) {
@@ -2053,8 +2134,80 @@ async function renderDetailedBoxScore(game) {
   `;
 }
 
+async function renderNFLDetailedBoxScore(game) {
+  try {
+    const summary = await espnApi(`/football/nfl/summary?event=${game.id}`);
+    if (!summary || !summary.boxscore || !summary.boxscore.teams) {
+      return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No detailed box score data found for this game yet.</div>`;
+    }
+    
+    const teams = summary.boxscore.teams;
+    const awayTeamObj = teams.find(t => t.team.abbreviation === game.awayAbbr) || teams[0];
+    const homeTeamObj = teams.find(t => t.team.abbreviation === game.homeAbbr) || teams[1];
+    
+    const getStat = (teamObj, statName) => {
+      const stat = teamObj.statistics?.find(s => s.name === statName);
+      return stat ? stat.displayValue || stat.value : "—";
+    };
+    
+    const homeName = game.homeTeam || homeTeamObj.team.displayName;
+    const awayName = game.awayTeam || awayTeamObj.team.displayName;
+    
+    const metrics = [
+      { name: "Total Yards", key: "totalYards" },
+      { name: "Yards per Play", key: "yardsPerPlay" },
+      { name: "Passing Yards", key: "netPassingYards" },
+      { name: "Comp/Att", key: "completionAttempts" },
+      { name: "Rushing Yards", key: "rushingYards" },
+      { name: "Rushing Attempts", key: "rushingAttempts" },
+      { name: "1st Downs", key: "firstDowns" },
+      { name: "3rd Down Eff", key: "thirdDownEff" },
+      { name: "4th Down Eff", key: "fourthDownEff" },
+      { name: "Turnovers", key: "turnovers" },
+      { name: "Possession Time", key: "possessionTime" }
+    ];
+    
+    let rowsHtml = "";
+    metrics.forEach(m => {
+      const awayVal = getStat(awayTeamObj, m.key);
+      const homeVal = getStat(homeTeamObj, m.key);
+      rowsHtml += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <td style="padding: 8px 0; font-weight: 500;">${m.name}</td>
+          <td style="padding: 8px 0; text-align: right; color: #60a5fa; font-weight: 600;">${awayVal}</td>
+          <td style="padding: 8px 0; text-align: right; color: #f43f5e; font-weight: 600;">${homeVal}</td>
+        </tr>
+      `;
+    });
+    
+    return `
+      <div style="display: flex; flex-direction: column; gap: 12px; font-family: inherit;">
+        <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Advanced Box Score (Post-Game Stats)</div>
+        
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.15); opacity: 0.8;">
+              <th style="padding: 6px 0;">Metric</th>
+              <th style="padding: 6px 0; color: #60a5fa; text-align: right;">${awayName}</th>
+              <th style="padding: 6px 0; color: #f43f5e; text-align: right;">${homeName}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (error) {
+    console.error("Error loading NFL box score:", error);
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center; color: #f87171;">Failed to load box score data: ${error.message}</div>`;
+  }
+}
+
 async function renderWinProbabilityChart(game) {
-  const data = await getWinProbabilityData(game.id);
+  const data = lastSportType === "nfl"
+    ? await getNFLWinProbabilityData(game.id)
+    : await getWinProbabilityData(game.id);
   if (!data || data.length === 0) {
     return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No play-by-play win probability chart data found for this game.</div>`;
   }
@@ -2216,6 +2369,66 @@ async function renderPlayerEfficiency(game) {
       </div>
     </div>
   `;
+}
+
+async function renderNFLPlayerEfficiency(game) {
+  try {
+    const summary = await espnApi(`/football/nfl/summary?event=${game.id}`);
+    if (!summary || !summary.leaders || summary.leaders.length === 0) {
+      return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No player statistics leaders available for this matchup.</div>`;
+    }
+    
+    const awayLeadersObj = summary.leaders.find(l => l.team?.abbreviation === game.awayAbbr) || summary.leaders[0];
+    const homeLeadersObj = summary.leaders.find(l => l.team?.abbreviation === game.homeAbbr) || summary.leaders[1];
+    
+    const awayName = game.awayTeam || "Away";
+    const homeName = game.homeTeam || "Home";
+    
+    const getLeadersHtml = (teamLeadersObj) => {
+      if (!teamLeadersObj || !teamLeadersObj.leaders) {
+        return `<div style="opacity:0.6;font-size:11px;">No leaders found.</div>`;
+      }
+      
+      return teamLeadersObj.leaders.map(cat => {
+        const leader = cat.leaders?.[0];
+        if (!leader) return '';
+        const name = leader.athlete?.displayName || "Unknown Player";
+        const pos = leader.athlete?.position?.abbreviation || "";
+        const statLabel = cat.displayName || cat.name;
+        const statValue = leader.displayValue || leader.value || "";
+        
+        return `
+          <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <div style="font-size: 9px; opacity: 0.6; text-transform: uppercase;">${statLabel}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+              <span style="font-weight: 700; font-size: 11px;">${name} <span style="font-size: 8px; opacity: 0.5; background: rgba(255,255,255,0.1); padding: 1px 3px; border-radius: 3px; margin-left: 2px;">${pos}</span></span>
+              <span style="font-weight: 800; font-size: 11px; color: #2ecc71;">${statValue}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+    
+    return `
+      <div style="display: flex; flex-direction: column; gap: 14px; font-family: inherit;">
+        <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Player Performance Leaders</div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <div style="font-weight: 700; font-size: 11px; color: #60a5fa; margin-bottom: 8px; border-bottom: 1px solid rgba(96,165,250,0.2); padding-bottom: 4px;">${awayName}</div>
+            ${getLeadersHtml(awayLeadersObj)}
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 11px; color: #f43f5e; margin-bottom: 8px; border-bottom: 1px solid rgba(244,63,94,0.2); padding-bottom: 4px;">${homeName}</div>
+            ${getLeadersHtml(homeLeadersObj)}
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error("Error loading NFL player performance:", error);
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center; color: #f87171;">Failed to load player performance leaders: ${error.message}</div>`;
+  }
 }
 
 async function runDataExporter(game) {

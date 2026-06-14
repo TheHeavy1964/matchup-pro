@@ -46,17 +46,17 @@
 
 ### Milestone 9: Advanced Local Analytics & Sub-panels
 - [x] Intercept dropdown clicks on the "Analytics" dropdown.
-- [x] Embed detailed advanced box scores (Success Rates, Explosiveness, Havoc) from `/game/box/advanced`.
-- [x] Render play-by-play win probability charts as responsive SVG curves from `/metrics/wp`.
+- [x] Embed detailed advanced box scores (Success Rates, Explosiveness, Havoc) from `/game/box/advanced` for CFB, and team statistics from `/summary?event={id}` for NFL.
+- [x] Render play-by-play win probability charts as responsive SVG curves from `/metrics/wp` for CFB, and `/summary?event={id}` for NFL.
 - [x] Display multi-year SP+ team rating history trends from `/ratings/sp?team={team}`.
-- [x] Sort and present player efficiency leaderboards (Average PPA) from `/ppa/players/season`.
+- [x] Sort and present player efficiency/performance leaderboards from `/ppa/players/season` (CFB) and game leaders (NFL).
 - [x] Implement a CSV Data Exporter downloading seasonal SP+ team rankings.
 - [x] Build an interactive normal distribution-based Situation Win Probability Calculator.
 
 ---
 
 ## 🚀 Current Trajectory
-We have successfully implemented a fully contextual, premium advanced analytics dashboard directly inside the extension popup. Clicks on the top "Analytics" dropdown are intercepted and query live CFB APIs to render beautiful glassmorphic analytics sub-panels: Advanced Box Scores, SVG Win Probability flows, SP+ Team Trends, Player PPA Efficiency leaderboards, a downloadable CSV Data Exporter for SP+ rankings, and a situation-based live Win Probability Calculator using a CDF normal distribution approximation model.
+We have successfully implemented a fully contextual, premium advanced analytics dashboard directly inside the extension popup for both College Football and NFL. Clicks on the top "Analytics" dropdown are intercepted and query live CFB and ESPN NFL APIs to render beautiful glassmorphic analytics sub-panels: Advanced Box Scores, SVG Win Probability flows, SP+ Team Trends, Player Performance leaderboards, a downloadable CSV Data Exporter for SP+ rankings, and a situation-based live Win Probability Calculator.
 
 ---
 
@@ -64,4 +64,4 @@ We have successfully implemented a fully contextual, premium advanced analytics 
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Implement contextual advanced analytics sub-panels, charts, and situation calculator in popup.js | 🟢 Completed |
+| **Antigravity** | Implement NFL analytics parity (Box Scores, Player Performance, Win Probability Chart) and enable Analytics dropdown for NFL | 🟢 Completed |
