@@ -1841,6 +1841,16 @@ function showLocalAnalyticsMessage(title, message) {
 function updateAnalyticsDropdown(sport) {
   const isCFB = sport === "cfb";
   const dropdownContent = document.querySelector(".analytics-dropdown .dropdown-content");
+  const teamsGamesBtn = $("#teamsGamesBtn") || document.getElementById("teamsGamesBtn");
+  
+  if (teamsGamesBtn) {
+    if (isCFB) {
+      teamsGamesBtn.href = "https://collegefootballdata.com";
+    } else {
+      teamsGamesBtn.href = "https://www.espn.com/nfl/teams";
+    }
+  }
+  
   if (!dropdownContent) return;
   
   if (isCFB) {
