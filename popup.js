@@ -1877,12 +1877,12 @@ async function main() {
 
           const prediction = predictNFL(game);
 
-          const html = renderNFLSummary(game, homeStats, awayStats, prediction);
-          setOutput(html);
-          // Store for Copy Script
+          // Store for Copy Script & Player Explorer
           lastGame = game;
           lastSportType = 'nfl';
           window.lastPrediction = prediction;
+          const html = renderNFLSummary(game, homeStats, awayStats, prediction);
+          setOutput(html);
           const scriptBtn = $('#copyScriptBtn');
           if (scriptBtn) scriptBtn.disabled = false;
 
@@ -1925,13 +1925,13 @@ async function main() {
 
             console.log('Rendering CFB summary...');
             try {
-              const html = renderCFBSummary({ game, ratings, homeStats, awayStats, betting, prediction });
-              console.log('CFB summary rendered successfully');
-              setOutput(html);
-              // Store for Copy Script
+              // Store for Copy Script & Player Explorer
               lastGame = game;
               lastSportType = 'cfb';
               window.lastPrediction = prediction;
+              const html = renderCFBSummary({ game, ratings, homeStats, awayStats, betting, prediction });
+              console.log('CFB summary rendered successfully');
+              setOutput(html);
               const scriptBtn = $('#copyScriptBtn');
               if (scriptBtn) scriptBtn.disabled = false;
             } catch (renderError) {
