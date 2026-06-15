@@ -609,7 +609,9 @@ async function getNFLTeamStats(teamAbbr, season) {
                            category.name.toLowerCase().includes('rushing');
           category.stats?.forEach(stat => {
             const target = isOffense ? offensive : defensive;
-            target[stat.name] = stat.value;
+            if (stat.name !== 'totalYards') {
+              target[stat.name] = stat.value;
+            }
             if (stat.name === 'totalPointsPerGame') target['pointsPerGame'] = stat.value;
             if (stat.name === 'yardsPerGame') target['totalYards'] = stat.value;
           });
@@ -624,7 +626,9 @@ async function getNFLTeamStats(teamAbbr, season) {
                          category.name.toLowerCase().includes('rushing');
         category.stats?.forEach(stat => {
           const target = isOffense ? offensive : defensive;
-          target[stat.name] = stat.value;
+          if (stat.name !== 'totalYards') {
+            target[stat.name] = stat.value;
+          }
           if (stat.name === 'totalPointsPerGame') target['pointsPerGame'] = stat.value;
           if (stat.name === 'yardsPerGame') target['totalYards'] = stat.value;
         });
