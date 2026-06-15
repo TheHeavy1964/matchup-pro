@@ -71,6 +71,7 @@ async function getApiKey() {
 function setLoading(isLoading) {
   const loader = $("#loader");
   if (loader) loader.style.display = isLoading ? "block" : "none";
+  updateDashboardPanels();
 }
 
 function setOutput(html) {
@@ -87,6 +88,7 @@ function setOutput(html) {
       output.innerHTML = html;
     }
     attachShareBtnListener();
+    updateDashboardPanels();
   }
 }
 
@@ -1639,6 +1641,35 @@ async function initReferralWidget() {
   }
 }
 
+// Adjust position of loader and output dynamically based on desktop vs mobile screen layout
+function adjustLayoutForScreenSize() {
+  const isDesktop = window.innerWidth >= 1025;
+  const leftPanel = document.querySelector(".left-panel");
+  const rightPanel = document.querySelector(".right-panel");
+  const output = document.getElementById("output");
+  const loader = document.getElementById("loader");
+  
+  if (!leftPanel || !rightPanel || !output || !loader) return;
+  
+  if (isDesktop) {
+    if (output.parentNode !== rightPanel) {
+      rightPanel.appendChild(loader);
+      rightPanel.appendChild(output);
+    }
+  } else {
+    const referralWidget = document.getElementById("referralWidget");
+    if (output.parentNode !== leftPanel) {
+      if (referralWidget) {
+        leftPanel.insertBefore(loader, referralWidget);
+        leftPanel.insertBefore(output, referralWidget);
+      } else {
+        leftPanel.appendChild(loader);
+        leftPanel.appendChild(output);
+      }
+    }
+  }
+}
+
 // Manage dynamic dashboard layouts relative to the viewing screen
 function updateDashboardPanels() {
   const welcome = document.getElementById("dashboardWelcome");
@@ -1647,12 +1678,17 @@ function updateDashboardPanels() {
   const analyticsContainer = document.getElementById("analyticsContainer");
   const teamsGamesContainer = document.getElementById("teamsGamesContainer");
   const playersContainer = document.getElementById("playersContainer");
+  const output = document.getElementById("output");
+  const loader = document.getElementById("loader");
   
   const analyticsVisible = analyticsContainer && analyticsContainer.style.display !== "none";
   const teamsGamesVisible = teamsGamesContainer && teamsGamesContainer.style.display !== "none";
   const playersVisible = playersContainer && playersContainer.style.display !== "none";
   
-  if (analyticsVisible || teamsGamesVisible || playersVisible) {
+  const hasOutput = output && output.innerHTML.trim() !== "";
+  const loaderVisible = loader && loader.style.display !== "none";
+  
+  if (analyticsVisible || teamsGamesVisible || playersVisible || hasOutput || loaderVisible) {
     welcome.style.display = "none";
   } else {
     // Show welcome panel on desktop screens
@@ -1985,7 +2021,11 @@ async function main() {
   initPlayersExplorer();
 
   // Handle window resizing and initial dashboard panels layout
-  window.addEventListener("resize", updateDashboardPanels);
+  window.addEventListener("resize", () => {
+    adjustLayoutForScreenSize();
+    updateDashboardPanels();
+  });
+  adjustLayoutForScreenSize();
   updateDashboardPanels();
 
   console.log('Event listeners set up');
