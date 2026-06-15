@@ -1639,6 +1639,31 @@ async function initReferralWidget() {
   }
 }
 
+// Manage dynamic dashboard layouts relative to the viewing screen
+function updateDashboardPanels() {
+  const welcome = document.getElementById("dashboardWelcome");
+  if (!welcome) return;
+  
+  const analyticsContainer = document.getElementById("analyticsContainer");
+  const teamsGamesContainer = document.getElementById("teamsGamesContainer");
+  const playersContainer = document.getElementById("playersContainer");
+  
+  const analyticsVisible = analyticsContainer && analyticsContainer.style.display !== "none";
+  const teamsGamesVisible = teamsGamesContainer && teamsGamesContainer.style.display !== "none";
+  const playersVisible = playersContainer && playersContainer.style.display !== "none";
+  
+  if (analyticsVisible || teamsGamesVisible || playersVisible) {
+    welcome.style.display = "none";
+  } else {
+    // Show welcome panel on desktop screens
+    if (window.innerWidth >= 1025) {
+      welcome.style.display = "block";
+    } else {
+      welcome.style.display = "none";
+    }
+  }
+}
+
 // Main event handlers
 async function main() {
   console.log('Popup script loaded');
@@ -1950,6 +1975,7 @@ async function main() {
   if (closeAnalyticsBtn && analyticsContainer) {
     closeAnalyticsBtn.addEventListener("click", () => {
       analyticsContainer.style.display = "none";
+      updateDashboardPanels();
     });
   }
 
@@ -1957,6 +1983,10 @@ async function main() {
   updateAnalyticsDropdown("cfb");
   initTeamsGamesExplorer();
   initPlayersExplorer();
+
+  // Handle window resizing and initial dashboard panels layout
+  window.addEventListener("resize", updateDashboardPanels);
+  updateDashboardPanels();
 
   console.log('Event listeners set up');
 }
@@ -1969,7 +1999,10 @@ function showLocalAnalyticsMessage(title, message) {
   const loaderEl = $("#analyticsLoader");
   const bodyEl = $("#analyticsBody");
   
-  if (container) container.style.display = "block";
+  if (container) {
+    container.style.display = "block";
+    updateDashboardPanels();
+  }
   if (titleEl) titleEl.textContent = title;
   if (loaderEl) loaderEl.style.display = "none";
   if (bodyEl) {
@@ -1994,6 +2027,7 @@ function initTeamsGamesExplorer() {
   if (closeTeamsGamesBtn && teamsGamesContainer) {
     closeTeamsGamesBtn.addEventListener("click", () => {
       teamsGamesContainer.style.display = "none";
+      updateDashboardPanels();
     });
   }
   
@@ -2009,12 +2043,15 @@ function initTeamsGamesExplorer() {
       const currentSport = $("#sportType")?.value || "cfb";
       console.log("Teams & Games Explorer opened for sport:", currentSport);
       
-      // Hide analytics container if open
+      // Hide other panels
       const analyticsContainer = $("#analyticsContainer");
       if (analyticsContainer) analyticsContainer.style.display = "none";
+      const playersContainer = $("#playersContainer");
+      if (playersContainer) playersContainer.style.display = "none";
       
       // Show container and loading
       teamsGamesContainer.style.display = "block";
+      updateDashboardPanels();
       const loaderEl = $("#teamsGamesLoader");
       const bodyEl = $("#teamsGamesBody");
       
@@ -2185,6 +2222,7 @@ function initPlayersExplorer() {
   if (closePlayersBtn && playersContainer) {
     closePlayersBtn.addEventListener("click", () => {
       playersContainer.style.display = "none";
+      updateDashboardPanels();
     });
   }
   
@@ -2197,6 +2235,7 @@ function initPlayersExplorer() {
       if (teamsGamesContainer) teamsGamesContainer.style.display = "none";
       
       playersContainer.style.display = "block";
+      updateDashboardPanels();
       playersContainer.scrollIntoView({ behavior: "smooth" });
       
       // Update quick select buttons based on current matchup
@@ -2619,8 +2658,15 @@ function bindAnalyticsDropdownListeners() {
         return;
       }
 
+      // Hide other panels
+      const teamsGamesContainer = $("#teamsGamesContainer");
+      if (teamsGamesContainer) teamsGamesContainer.style.display = "none";
+      const playersContainer = $("#playersContainer");
+      if (playersContainer) playersContainer.style.display = "none";
+
       // Show container and loader
       analyticsContainer.style.display = "block";
+      updateDashboardPanels();
       const titleEl = $("#analyticsTitle");
       if (titleEl) titleEl.textContent = `📈 ${label}`;
       
@@ -2665,6 +2711,7 @@ function bindAnalyticsDropdownListeners() {
             // Fallback: open external link in new tab
             window.open(href, "_blank");
             analyticsContainer.style.display = "none";
+            updateDashboardPanels();
             return;
           }
         } else {
@@ -2681,6 +2728,7 @@ function bindAnalyticsDropdownListeners() {
             // Fallback: open external link in new tab
             window.open(href, "_blank");
             analyticsContainer.style.display = "none";
+            updateDashboardPanels();
             return;
           }
         }

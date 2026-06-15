@@ -732,94 +732,95 @@
     <div class="background-pattern"></div>
     
     <div class="container">
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">🏈</div>
-                <div>
-                    <h1>Matchup Pro</h1>
-                    <div class="subtitle">Smart Football Analytics</div>
-                </div>
-            </div>
-            <div class="premium-badge" id="premiumBadge" style="cursor: pointer; display: none;">Pro</div>
-        </div>
-
-        <!-- Live Streaming & Podcast Analytics Navigation -->
-        <div class="analytics-nav" style="display: flex; gap: 8px; margin-bottom: 16px; position: relative;">
-            <div class="analytics-dropdown">
-                <button class="nav-btn dropdown-trigger" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); color: #2ecc71; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.25s;">
-                    <span>📊</span> Analytics <span style="font-size: 8px; margin-left: 2px; vertical-align: middle;">▼</span>
-                </button>
-                <div class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; width: 230px; background: rgba(26, 26, 36, 0.98); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.6); overflow: hidden; padding: 4px 0;">
-                    <a href="https://collegefootballdata.com/exporter" target="_blank" class="dropdown-item">📥 CFB Data Exporter</a>
-                    <a href="https://collegefootballdata.com/metrics/season" target="_blank" class="dropdown-item">📈 Team Metrics Explorer</a>
-                    <a href="https://collegefootballdata.com/boxscore" target="_blank" class="dropdown-item">📋 Advanced Box Scores</a>
-                    <a href="https://collegefootballdata.com/wp" target="_blank" class="dropdown-item">📉 Win Probability Chart</a>
-                    <a href="https://collegefootballdata.com/win-probability" target="_blank" class="dropdown-item">🧮 Win Probability Calculator</a>
-                    <a href="https://collegefootballdata.com/sp/trends" target="_blank" class="dropdown-item">⚡ SP+ Team Trends</a>
-                    <a href="https://collegefootballdata.com/ppa/usage" target="_blank" class="dropdown-item">👤 Player Efficiency</a>
-                    <a href="https://collegefootballdata.com/ppa/passing/cumulative" target="_blank" class="dropdown-item">↗️ Passing Trends</a>
-                    <a href="https://collegefootballdata.com/predictedpoints" target="_blank" class="dropdown-item">🧮 Predicted Points</a>
-                </div>
-            </div>
-            
-            <a id="teamsGamesBtn" href="https://collegefootballdata.com" target="_blank" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.25s;">
-                <span>🏳️</span> Teams & Games
-            </a>
-            <a id="playersBtn" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.25s; margin-left: 6px;">
-                <span>👤</span> Players
-            </a>
-        </div>
-
-        <div class="search-section">
-            <div class="sport-tabs">
-                <button class="sport-tab active" data-sport="cfb">College</button>
-                <button class="sport-tab" data-sport="nfl">NFL</button>
-            </div>
-
-            <input type="text" class="search-input" id="teamInput" placeholder="Search teams (e.g., Georgia, Cowboys)" />
-
-            <!-- Matchup Controls -->
-            <div class="controls-grid">
-                <div class="control-group">
-                    <div class="control-label">Week</div>
-                    <div id="cfbWeekContainer">
-                        <select id="week" style="width: 100%;"></select>
-                    </div>
-                    <div id="nflWeekContainer" style="display: none;">
-                        <select id="nflWeek" style="width: 100%;"></select>
+        <div class="left-panel">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">🏈</div>
+                    <div>
+                        <h1>Matchup Pro</h1>
+                        <div class="subtitle">Smart Football Analytics</div>
                     </div>
                 </div>
-                <div class="control-group">
-                    <div class="control-label">Season</div>
-                    <select id="year" style="width: 100%;"></select>
+                <div class="premium-badge" id="premiumBadge" style="cursor: pointer; display: none;">Pro</div>
+            </div>
+
+            <!-- Live Streaming & Podcast Analytics Navigation -->
+            <div class="analytics-nav" style="display: flex; gap: 8px; margin-bottom: 16px; position: relative;">
+                <div class="analytics-dropdown">
+                    <button class="nav-btn dropdown-trigger" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); color: #2ecc71; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.25s;">
+                        <span>📊</span> Analytics <span style="font-size: 8px; margin-left: 2px; vertical-align: middle;">▼</span>
+                    </button>
+                    <div class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; width: 230px; background: rgba(26, 26, 36, 0.98); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.6); overflow: hidden; padding: 4px 0;">
+                        <a href="https://collegefootballdata.com/exporter" target="_blank" class="dropdown-item">📥 CFB Data Exporter</a>
+                        <a href="https://collegefootballdata.com/metrics/season" target="_blank" class="dropdown-item">📈 Team Metrics Explorer</a>
+                        <a href="https://collegefootballdata.com/boxscore" target="_blank" class="dropdown-item">📋 Advanced Box Scores</a>
+                        <a href="https://collegefootballdata.com/wp" target="_blank" class="dropdown-item">📉 Win Probability Chart</a>
+                        <a href="https://collegefootballdata.com/win-probability" target="_blank" class="dropdown-item">🧮 Win Probability Calculator</a>
+                        <a href="https://collegefootballdata.com/sp/trends" target="_blank" class="dropdown-item">⚡ SP+ Team Trends</a>
+                        <a href="https://collegefootballdata.com/ppa/usage" target="_blank" class="dropdown-item">👤 Player Efficiency</a>
+                        <a href="https://collegefootballdata.com/ppa/passing/cumulative" target="_blank" class="dropdown-item">↗️ Passing Trends</a>
+                        <a href="https://collegefootballdata.com/predictedpoints" target="_blank" class="dropdown-item">🧮 Predicted Points</a>
+                    </div>
+                </div>
+                
+                <a id="teamsGamesBtn" href="https://collegefootballdata.com" target="_blank" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.25s;">
+                    <span>🏳️</span> Teams & Games
+                </a>
+                <a id="playersBtn" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.25s; margin-left: 6px;">
+                    <span>👤</span> Players
+                </a>
+            </div>
+
+            <div class="search-section">
+                <div class="sport-tabs">
+                    <button class="sport-tab active" data-sport="cfb">College</button>
+                    <button class="sport-tab" data-sport="nfl">NFL</button>
+                </div>
+
+                <input type="text" class="search-input" id="teamInput" placeholder="Search teams (e.g., Georgia, Cowboys)" />
+
+                <!-- Matchup Controls -->
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <div class="control-label">Week</div>
+                        <div id="cfbWeekContainer">
+                            <select id="week" style="width: 100%;"></select>
+                        </div>
+                        <div id="nflWeekContainer" style="display: none;">
+                            <select id="nflWeek" style="width: 100%;"></select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">Season</div>
+                        <select id="year" style="width: 100%;"></select>
+                    </div>
+                </div>
+
+                <div id="cfbSeasonTypeContainer" class="control-group" style="margin-bottom: 16px;">
+                    <div class="control-label">Season Type</div>
+                    <select id="seasonType" style="width: 100%;">
+                        <option value="regular">Regular</option>
+                        <option value="postseason">Postseason</option>
+                    </select>
+                </div>
+
+                <!-- Hidden sport type selector for popup.js compatibility -->
+                <select id="sportType" style="display: none;">
+                    <option value="cfb">College Football</option>
+                    <option value="nfl">NFL</option>
+                </select>
+
+                <!-- Script Tone Selection -->
+                <div class="control-group" style="margin-top: 12px;">
+                    <div class="control-label">🎙️ Podcast Script Tone</div>
+                    <select id="scriptTone">
+                        <option value="broadcast">🎙️ Broadcast Style (Professional)</option>
+                        <option value="hype">🔥 Hype Mode (High Energy)</option>
+                        <option value="trashtalk">🤬 Trash Talk (Rivalry Heat)</option>
+                        <option value="hottake">🌶️ Spicy Hot Take (Bold Prediction)</option>
+                    </select>
                 </div>
             </div>
-
-            <div id="cfbSeasonTypeContainer" class="control-group" style="margin-bottom: 16px;">
-                <div class="control-label">Season Type</div>
-                <select id="seasonType" style="width: 100%;">
-                    <option value="regular">Regular</option>
-                    <option value="postseason">Postseason</option>
-                </select>
-            </div>
-
-            <!-- Hidden sport type selector for popup.js compatibility -->
-            <select id="sportType" style="display: none;">
-                <option value="cfb">College Football</option>
-                <option value="nfl">NFL</option>
-            </select>
-
-            <!-- Script Tone Selection -->
-            <div class="control-group" style="margin-top: 12px;">
-                <div class="control-label">🎙️ Podcast Script Tone</div>
-                <select id="scriptTone">
-                    <option value="broadcast">🎙️ Broadcast Style (Professional)</option>
-                    <option value="hype">🔥 Hype Mode (High Energy)</option>
-                    <option value="trashtalk">🤬 Trash Talk (Rivalry Heat)</option>
-                    <option value="hottake">🌶️ Spicy Hot Take (Bold Prediction)</option>
-                </select>
-            </div>
-        </div>
 
             <div class="quick-picks">
                 <div class="quick-picks-title">🔥 Featured Matchups</div>
@@ -849,8 +850,54 @@
             
             <div id="output"></div>
             
+            <!-- Referral Widget -->
+            <div id="referralWidget" class="referral-box"></div>
+
+            <!-- Powered By Innov8Edge Footer -->
+            <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; opacity: 0.6; font-family: 'Outfit', sans-serif; color: white;">
+                <span>Powered by</span>
+                <img src="icons/innov8edge-logo.png" alt="Innov8Edge" style="height: 14px; object-fit: contain;" />
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <!-- Desktop Welcome Canvas -->
+            <div id="dashboardWelcome" class="card" style="display: none; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); font-family: 'Outfit', sans-serif; height: 100%;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="font-size: 40px; margin-bottom: 12px;">🏈</div>
+                    <h2 style="font-size: 22px; font-weight: 800; background: linear-gradient(45deg, #ffffff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Matchup Pro Analytics Hub</h2>
+                    <p style="font-size: 13px; color: #a5b4fc; opacity: 0.8;">Select a matchup or open an explorer panel to view advanced stats.</p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px; margin: 0 auto;">
+                    <div style="display: flex; gap: 16px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
+                        <span style="font-size: 20px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #22c55e;">🔍</span>
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; color: white;">Find Matchups</h4>
+                            <p style="font-size: 12px; opacity: 0.7; line-height: 1.4; color: #cbd5e1;">Search for any FBS College Football or NFL team to run side-by-side offensive & defensive matchups, win probability predictions, and tone-specific podcast script generation.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 16px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
+                        <span style="font-size: 20px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #3b82f6;">📈</span>
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; color: white;">In-App Advanced Analytics</h4>
+                            <p style="font-size: 12px; opacity: 0.7; line-height: 1.4; color: #cbd5e1;">Use the dropdown menu to load detailed SP+ team trends, QB passing efficiency grids, play-by-play win probability charts, and situation-based calculators on the right side.</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
+                        <span style="font-size: 20px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #a855f7;">👥</span>
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; color: white;">Rosters & Live Injuries</h4>
+                            <p style="font-size: 12px; opacity: 0.7; line-height: 1.4; color: #cbd5e1;">Browse complete team rosters, player jersey numbers, positions, and live injury feeds directly. Check depth charts and player stats before making predictions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Detailed Analytics Container -->
-            <div id="analyticsContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; margin-top: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
+            <div id="analyticsContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
                     <h3 id="analyticsTitle" style="font-size: 15px; font-weight: 700; color: #2ecc71; display: flex; align-items: center; gap: 8px;">📈 Detailed Analytics</h3>
                     <button id="closeAnalyticsBtn" style="background: none; border: none; color: rgba(255,255,255,0.5); font-size: 16px; cursor: pointer; padding: 4px; transition: all 0.2s; outline: none;">✕</button>
@@ -863,7 +910,7 @@
             </div>
             
             <!-- Teams & Games Explorer Container -->
-            <div id="teamsGamesContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; margin-top: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
+            <div id="teamsGamesContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
                     <h3 id="teamsGamesTitle" style="font-size: 15px; font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 8px;">🏳️ Teams & Games Explorer</h3>
                     <button id="closeTeamsGamesBtn" style="background: none; border: none; color: rgba(255,255,255,0.5); font-size: 16px; cursor: pointer; padding: 4px; transition: all 0.2s; outline: none;">✕</button>
@@ -883,7 +930,7 @@
             </div>
             
             <!-- Players Explorer Container -->
-            <div id="playersContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; margin-top: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
+            <div id="playersContainer" style="display: none; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Outfit', sans-serif;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
                     <h3 style="font-size: 15px; font-weight: 700; color: #a855f7; display: flex; align-items: center; gap: 8px;">👤 Roster & Injuries</h3>
                     <button id="closePlayersBtn" style="background: none; border: none; color: rgba(255,255,255,0.5); font-size: 16px; cursor: pointer; padding: 4px; transition: all 0.2s; outline: none;">✕</button>
@@ -915,17 +962,9 @@
                 </div>
                 
                 <div id="playersBody" style="font-size: 13px; line-height: 1.5; color: white; max-height: 320px; overflow-y: auto; padding-right: 4px;"></div>
-            </div>
-            
-            <!-- Referral Widget -->
-            <div id="referralWidget" class="referral-box"></div>
-
-            <!-- Powered By Innov8Edge Footer -->
-            <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; opacity: 0.6; font-family: 'Outfit', sans-serif; color: white;">
-                <span>Powered by</span>
-                <img src="icons/innov8edge-logo.png" alt="Innov8Edge" style="height: 14px; object-fit: contain;" />
-            </div>
-        </div>
+            </div> <!-- end playersContainer -->
+        </div> <!-- end right-panel -->
+    </div> <!-- end container -->
 
     <script src="html2canvas.min.js"></script>
     <script src="popup.js"></script>
