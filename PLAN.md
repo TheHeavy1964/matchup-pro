@@ -50,6 +50,8 @@
 - [x] Render play-by-play win probability charts as responsive SVG curves from `/metrics/wp` for CFB, and `/summary?event={id}` for NFL.
 - [x] Display multi-year SP+ team rating history trends from `/ratings/sp?team={team}`.
 - [x] Sort and present player efficiency/performance leaderboards from `/ppa/players/season` (CFB) and game leaders (NFL).
+- [x] Implement in-app NFL Standings organized by division with W-L records and point differentials.
+- [x] Implement in-app NFL Leaderboard showcasing league leaders across passing, rushing, receiving, tackles, sacks, and interceptions.
 - [x] Implement a CSV Data Exporter downloading seasonal SP+ team rankings.
 - [x] Build an interactive normal distribution-based Situation Win Probability Calculator.
 - [x] Integrate "Team Metrics Explorer" in-app (using `/stats/season/advanced` stats side-by-side comparison).
@@ -87,7 +89,7 @@
 ---
 
 ## 🚀 Current Trajectory
-We have successfully implemented dynamic layout relocation for desktop screens, resolving the uneven sidebar/workspace heights, and fixed the player quick-select race condition. We have committed and deployed the changes to production.
+We have successfully implemented in-app NFL Leaderboards and NFL Standings, resolving the issue where these analytics features opened in separate browser tabs. We also documented the fallback stats source for Week 1/preseason and the formatting of preseason standings records. All changes have been tested and verified locally in the browser with screenshots and a video recording.
 
 ---
 
@@ -95,4 +97,4 @@ We have successfully implemented dynamic layout relocation for desktop screens, 
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Optimize desktop layout balance, fix player quick-select caching, rebuild zip, and deploy to Vercel | 🟢 Completed |
+| **Antigravity** | Implement in-app NFL Standings & Leaderboards, explain preseason fallback logic, and verify UI in the browser | 🟢 Completed |

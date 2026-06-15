@@ -898,6 +898,10 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
     weekDisplay = playoffNames[game.week - 23] || `Playoff Week ${game.week - 22}`;
   }
   
+  const isPriorSeason = game.week <= 5;
+  const predictorBadge = isPriorSeason ? ' <span style="color: #f59e0b; font-size: 8px; font-weight: 800; background: rgba(245,158,11,0.15); padding: 1.5px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle;">Prior Season Fallback</span>' : '';
+  const statsBadge = isPriorSeason ? ' <span style="color: #f59e0b; font-size: 8px; font-weight: 800; background: rgba(245,158,11,0.15); padding: 1.5px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle;">Prior Season Stats</span>' : '';
+
   // Calculate stats split percentages
   const homePPG = parseFloat(homeStats?.offensive?.pointsPerGame) || 0;
   const awayPPG = parseFloat(awayStats?.offensive?.pointsPerGame) || 0;
@@ -956,7 +960,7 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
       <!-- AI Predictor Meter -->
       <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
         <div style="text-align: center; margin-bottom: 12px;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor</div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor${predictorBadge}</div>
           <div style="font-size: 16px; font-weight: 800; color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.2);">${prediction.winner} Projected Winner</div>
           <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
         </div>
@@ -973,7 +977,7 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
 
       <!-- Stats Comparison Bars -->
       <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px;">
-        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Offensive Matchup Comparison</div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Offensive Matchup Comparison${statsBadge}</div>
         
         <!-- PPG -->
         <div>
@@ -1094,6 +1098,11 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
   const home = game.home_team || game.homeTeam || game.home || null;
   const away = game.away_team || game.awayTeam || game.away || null;
   const gameDate = game.start_date || game.startDate || null;
+  
+  const isPriorSeason = game.week <= 1;
+  const predictorBadge = isPriorSeason ? ' <span style="color: #f59e0b; font-size: 8px; font-weight: 800; background: rgba(245,158,11,0.15); padding: 1.5px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle;">Prior Season Fallback</span>' : '';
+  const statsBadge = isPriorSeason ? ' <span style="color: #f59e0b; font-size: 8px; font-weight: 800; background: rgba(245,158,11,0.15); padding: 1.5px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle;">Prior Season Stats</span>' : '';
+
   const formattedDate = gameDate
     ? new Date(gameDate).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
     : '—';
@@ -1179,7 +1188,7 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
       <!-- AI Predictor Meter -->
       <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; position: relative; z-index: 1; backdrop-filter: blur(10px);">
         <div style="text-align: center; margin-bottom: 12px;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor</div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 6px;">AI Matchup Predictor${predictorBadge}</div>
           <div style="font-size: 16px; font-weight: 800; color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.2);">${prediction.winner} Projected Winner</div>
           <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Predicted margin: <strong>${fmt(prediction.margin, 1)} points</strong></div>
         </div>
@@ -1196,7 +1205,7 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
 
       <!-- Stats Comparison Bars -->
       <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px;">
-        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Advanced Offensive Matchup</div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; text-align: center; margin-bottom: 2px; font-weight: 700;">Advanced Offensive Matchup${statsBadge}</div>
         
         <!-- PPG -->
         <div>
@@ -2767,6 +2776,10 @@ function bindAnalyticsDropdownListeners() {
             contentHtml = await renderNFLPlayerEfficiency(lastGame);
           } else if (label.includes("Win Probability Calculator")) {
             contentHtml = renderWPLocalCalculator(lastGame);
+          } else if (label.includes("Leaderboard")) {
+            contentHtml = await renderNFLLeaderboard();
+          } else if (label.includes("Standings")) {
+            contentHtml = await renderNFLStandings();
           } else {
             // Fallback: open external link in new tab
             window.open(href, "_blank");
@@ -3741,6 +3754,213 @@ function hookUpEPCalculator() {
   yardSlider.addEventListener("input", updateDisplay);
 
   updateDisplay();
+}
+
+async function renderNFLLeaderboard() {
+  const data = await espnApi("/football/nfl/statistics");
+  if (!data || !data.stats || !data.stats.categories) {
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No leaderboard data found.</div>`;
+  }
+  
+  const seasonYear = data.season?.displayName || lastGame?.season || new Date().getFullYear();
+  
+  const targetCategories = [
+    { key: 'passingYards', label: 'Passing Yards', icon: '↗️', suffix: 'YDS' },
+    { key: 'rushingYards', label: 'Rushing Yards', icon: '🏃', suffix: 'YDS' },
+    { key: 'receivingYards', label: 'Receiving Yards', icon: '🏈', suffix: 'YDS' },
+    { key: 'sacks', label: 'Sacks', icon: '💥', suffix: 'SCK' },
+    { key: 'interceptions', label: 'Interceptions', icon: '🛡️', suffix: 'INT' },
+    { key: 'totalTackles', label: 'Tackles', icon: '💪', suffix: 'TCKL' }
+  ];
+
+  let gridHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">`;
+
+  targetCategories.forEach(catInfo => {
+    const category = data.stats.categories.find(c => c.name === catInfo.key);
+    if (!category || !category.leaders || category.leaders.length === 0) return;
+    
+    let leadersHtml = "";
+    const topLeaders = category.leaders.slice(0, 4);
+    
+    topLeaders.forEach((leader, idx) => {
+      const athlete = leader.athlete || {};
+      const team = leader.team || {};
+      const photo = athlete.headshot ? athlete.headshot.href : 'icons/default-avatar.png';
+      const rankColor = idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.4)';
+      const rankIcon = idx === 0 ? '👑' : `${idx + 1}`;
+      
+      leadersHtml += `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+          <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1;">
+            <span style="font-size: 10px; font-weight: bold; width: 14px; text-align: center; color: ${rankColor};">
+              ${rankIcon}
+            </span>
+            <img src="${photo}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);" />
+            <div style="display: flex; flex-direction: column; overflow: hidden;">
+              <span style="font-weight: 600; font-size: 12px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${athlete.displayName}</span>
+              <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase;">${team.abbreviation || 'FA'}</span>
+            </div>
+          </div>
+          <div style="font-weight: bold; font-size: 12px; color: #2ecc71; text-align: right;">
+            ${leader.displayValue} <span style="font-size: 9px; opacity: 0.7; font-weight: normal; color: rgba(255,255,255,0.6);">${catInfo.suffix}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    gridHtml += `
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-weight: 800; font-size: 13px; color: #ffd700; display: flex; align-items: center; gap: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+          <span>${catInfo.icon}</span>
+          <span>${catInfo.label}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          ${leadersHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  gridHtml += `</div>`;
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 14px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">NFL Leaders (${seasonYear})</div>
+      ${gridHtml}
+    </div>
+  `;
+}
+
+async function renderNFLStandings() {
+  const season = lastGame?.season || new Date().getFullYear();
+  const url = `https://site.api.espn.com/apis/v2/sports/football/nfl/standings?season=${season}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch standings");
+  const data = await res.json();
+  
+  if (!data || !data.children) {
+    return `<div style="padding: 10px; opacity: 0.8; text-align: center;">No standings data found.</div>`;
+  }
+  
+  const NFL_DIVISIONS = {
+    'BUF': 'AFC East', 'MIA': 'AFC East', 'NE': 'AFC East', 'NYJ': 'AFC East',
+    'BAL': 'AFC North', 'CIN': 'AFC North', 'CLE': 'AFC North', 'PIT': 'AFC North',
+    'HOU': 'AFC South', 'IND': 'AFC South', 'JAX': 'AFC South', 'TEN': 'AFC South',
+    'DEN': 'AFC West', 'KC': 'AFC West', 'LV': 'AFC West', 'LAC': 'AFC West',
+    'DAL': 'NFC East', 'NYG': 'NFC East', 'PHI': 'NFC East', 'WSH': 'NFC East',
+    'CHI': 'NFC North', 'DET': 'NFC North', 'GB': 'NFC North', 'MIN': 'NFC North',
+    'ATL': 'NFC South', 'CAR': 'NFC South', 'NO': 'NFC South', 'TB': 'NFC South',
+    'ARI': 'NFC West', 'LAR': 'NFC West', 'SF': 'NFC West', 'SEA': 'NFC West'
+  };
+
+  const divisions = {};
+  Object.values(NFL_DIVISIONS).forEach(div => {
+    if (!divisions[div]) divisions[div] = [];
+  });
+  
+  data.children.forEach(conf => {
+    if (conf.standings && conf.standings.entries) {
+      conf.standings.entries.forEach(entry => {
+        const abbr = entry.team?.abbreviation;
+        const div = NFL_DIVISIONS[abbr] || (conf.name.includes("American") ? "AFC Other" : "NFC Other");
+        if (!divisions[div]) divisions[div] = [];
+        divisions[div].push(entry);
+      });
+    }
+  });
+
+  Object.keys(divisions).forEach(div => {
+    divisions[div].sort((a, b) => {
+      const getStatVal = (entry, name) => {
+        const s = entry.stats?.find(x => x.name === name);
+        return s ? s.value : 0;
+      };
+      const pctA = getStatVal(a, "winPercent");
+      const pctB = getStatVal(b, "winPercent");
+      if (pctB !== pctA) return pctB - pctA;
+      
+      const winsA = getStatVal(a, "wins");
+      const winsB = getStatVal(b, "wins");
+      return winsB - winsA;
+    });
+  });
+
+  let html = `
+    <div style="display: flex; flex-direction: column; gap: 16px; font-family: inherit;">
+      <div style="font-size: 11px; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">NFL Standings (${season})</div>
+  `;
+
+  const orderedDivisions = [
+    'AFC East', 'AFC North', 'AFC South', 'AFC West',
+    'NFC East', 'NFC North', 'NFC South', 'NFC West'
+  ];
+
+  orderedDivisions.forEach(divName => {
+    const entries = divisions[divName];
+    if (!entries || entries.length === 0) return;
+    
+    let rows = "";
+    entries.forEach(entry => {
+      const team = entry.team || {};
+      const logo = team.logos?.[0]?.href || "icons/default-team.png";
+      const stats = entry.stats || [];
+      const getStatDisp = (name) => {
+        const s = stats.find(x => x.name === name);
+        return s ? s.displayValue || s.value : "—";
+      };
+      
+      const record = getStatDisp("overall");
+      const pct = getStatDisp("winPercent");
+      const diff = getStatDisp("pointDifferential");
+      const streak = getStatDisp("streak");
+      const divRec = getStatDisp("divisionRecord");
+      
+      rows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;">
+          <td style="padding: 6px 4px; display: flex; align-items: center; gap: 8px;">
+            <img src="${logo}" style="width: 18px; height: 18px; object-fit: contain;" />
+            <span style="font-weight: 600; font-size: 12px; color: #fff;">${team.abbreviation}</span>
+            <span style="font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px;">${team.shortDisplayName}</span>
+          </td>
+          <td style="padding: 6px 4px; text-align: center; font-weight: 500;">${record}</td>
+          <td style="padding: 6px 4px; text-align: center; opacity: 0.8;">${pct}</td>
+          <td style="padding: 6px 4px; text-align: center; opacity: 0.8; color: ${diff.startsWith('+') ? '#2ecc71' : diff.startsWith('-') ? '#e74c3c' : 'inherit'}">${diff}</td>
+          <td style="padding: 6px 4px; text-align: center; opacity: 0.7; font-size: 10px;">${divRec}</td>
+          <td style="padding: 6px 4px; text-align: center; opacity: 0.7; font-size: 10px;">${streak}</td>
+        </tr>
+      `;
+    });
+
+    const isAFC = divName.startsWith("AFC");
+    const confName = isAFC ? "American Football Conference" : "National Football Conference";
+
+    html += `
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; overflow: hidden;">
+        <div style="background: rgba(255, 255, 255, 0.04); padding: 8px 12px; font-weight: 800; font-size: 12px; color: #ffd700; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
+          <span>${divName}</span>
+          <span style="font-size: 10px; opacity: 0.6; font-weight: normal;">${confName}</span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); opacity: 0.6; font-size: 10px; text-transform: uppercase;">
+              <th style="padding: 6px 4px;">Team</th>
+              <th style="padding: 6px 4px; text-align: center; width: 50px;">W-L</th>
+              <th style="padding: 6px 4px; text-align: center; width: 40px;">PCT</th>
+              <th style="padding: 6px 4px; text-align: center; width: 40px;">DIFF</th>
+              <th style="padding: 6px 4px; text-align: center; width: 45px;">DIV</th>
+              <th style="padding: 6px 4px; text-align: center; width: 40px;">STRK</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
 }
 
 // Initialize when DOM is ready
