@@ -851,6 +851,7 @@ async function findNFLGame(team, year, week) {
     return {
       id: game.id,
       date: game.date,
+      season: season,
       homeTeam: homeTeam.team.displayName,
       awayTeam: awayTeam.team.displayName,
       homeAbbr: homeTeam.team.abbreviation,
