@@ -89,6 +89,9 @@ function setOutput(html) {
     }
     attachShareBtnListener();
     updateDashboardPanels();
+    if (typeof updatePlayersQuickSelect === "function") {
+      updatePlayersQuickSelect();
+    }
   }
 }
 
@@ -2336,13 +2339,13 @@ function updatePlayersQuickSelect() {
   let awayTeamName = "";
   const sport = $("#sportType")?.value || "cfb";
   
-  if (window.lastGame) {
+  if (lastGame) {
     if (sport === "cfb") {
-      homeTeamName = window.lastGame.home_team || window.lastGame.homeTeam || window.lastGame.home || "";
-      awayTeamName = window.lastGame.away_team || window.lastGame.awayTeam || window.lastGame.away || "";
+      homeTeamName = lastGame.home_team || lastGame.homeTeam || lastGame.home || "";
+      awayTeamName = lastGame.away_team || lastGame.awayTeam || lastGame.away || "";
     } else {
-      homeTeamName = window.lastGame.homeTeam || "";
-      awayTeamName = window.lastGame.awayTeam || "";
+      homeTeamName = lastGame.homeTeam || "";
+      awayTeamName = lastGame.awayTeam || "";
     }
   }
   
