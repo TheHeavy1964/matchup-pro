@@ -91,7 +91,7 @@
 ---
 
 ## 🚀 Current Trajectory
-We have successfully resolved the Yards Per Game metric name clashing bug where cumulative season yards overwrote the average yards per game value. This has been fully verified on the live Vercel production app (`https://matchup-pro.vercel.app/`).
+We have successfully resolved the NFL Standings year discrepancy bug where the standings panel displayed the current calendar year (2026) instead of the selected matchup season (2025). This was caused by the lack of a `season` mapping in the returned object of `findNFLGame`. The fix has been fully verified and is live on the Vercel production app (`https://matchup-pro.vercel.app/`).
 
 ---
 
@@ -99,4 +99,4 @@ We have successfully resolved the Yards Per Game metric name clashing bug where 
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Resolve Yards Per Game metric mapping and sync Vercel production deployment | 🟢 Completed |
+| **Antigravity** | Resolve NFL Standings year discrepancy and deploy production updates | 🟢 Completed |
