@@ -75,6 +75,7 @@
 - [x] Resolve PPG metric mapping bug (supporting both `points` and `scoring` keys).
 - [x] Implement robust prior-season fallback (`year - 1`) for college football and NFL stats retrieval.
 - [x] Implement prior-season fallback warning badges on main matchup cards during Week 1 and preseason.
+- [x] Fix name clashing bug in Yards Per Game metric mapping.
 - [x] Generate and deploy premium 1200x630 Open Graph Image (OGI) at `/og-image.png`.
 - [x] Add descriptive SEO meta tags, Open Graph, and Twitter card preview elements to all page headers.
 - [x] Synchronize chrome extension build and Vercel SaaS deployment via origin repository sync.
@@ -90,7 +91,7 @@
 ---
 
 ## 🚀 Current Trajectory
-We have successfully implemented prior-season stats fallback labels in both the AI Matchup Predictor and Stats Comparison headers on the matchup card. These labels explicitly state where the stats come from during Week 1 and preseason. All updates have been fully committed, pushed to production, and verified live on Vercel (`https://matchup-pro.vercel.app/`).
+We have successfully resolved the Yards Per Game metric name clashing bug where cumulative season yards overwrote the average yards per game value. This has been fully verified on the live Vercel production app (`https://matchup-pro.vercel.app/`).
 
 ---
 
@@ -98,4 +99,4 @@ We have successfully implemented prior-season stats fallback labels in both the 
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Implement prior-season warning badges and sync Vercel production deployment | 🟢 Completed |
+| **Antigravity** | Resolve Yards Per Game metric mapping and sync Vercel production deployment | 🟢 Completed |
