@@ -74,6 +74,7 @@
 ### Milestone 11: Production Sync & Data Consistency
 - [x] Resolve PPG metric mapping bug (supporting both `points` and `scoring` keys).
 - [x] Implement robust prior-season fallback (`year - 1`) for college football and NFL stats retrieval.
+- [x] Implement prior-season fallback warning badges on main matchup cards during Week 1 and preseason.
 - [x] Generate and deploy premium 1200x630 Open Graph Image (OGI) at `/og-image.png`.
 - [x] Add descriptive SEO meta tags, Open Graph, and Twitter card preview elements to all page headers.
 - [x] Synchronize chrome extension build and Vercel SaaS deployment via origin repository sync.
@@ -89,7 +90,7 @@
 ---
 
 ## 🚀 Current Trajectory
-We have successfully implemented in-app NFL Leaderboards and NFL Standings, resolving the issue where these analytics features opened in separate browser tabs. We also documented the fallback stats source for Week 1/preseason and the formatting of preseason standings records. All changes have been tested and verified locally in the browser with screenshots and a video recording.
+We have successfully implemented prior-season stats fallback labels in both the AI Matchup Predictor and Stats Comparison headers on the matchup card. These labels explicitly state where the stats come from during Week 1 and preseason. All updates have been fully committed, pushed to production, and verified live on Vercel (`https://matchup-pro.vercel.app/`).
 
 ---
 
@@ -97,4 +98,4 @@ We have successfully implemented in-app NFL Leaderboards and NFL Standings, reso
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Implement in-app NFL Standings & Leaderboards, explain preseason fallback logic, and verify UI in the browser | 🟢 Completed |
+| **Antigravity** | Implement prior-season warning badges and sync Vercel production deployment | 🟢 Completed |
