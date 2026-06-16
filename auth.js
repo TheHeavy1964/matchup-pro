@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const passwordInput = document.getElementById("authPassword");
 
     // Check existing session
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         authOverlay.style.display = "none";
         trackEvent('app_opened');
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Listen for auth state changes
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN') {
             authOverlay.style.display = "none";
             trackEvent('user_login');
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         authError.innerText = "Authenticating...";
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabaseClient.auth.signInWithPassword({
             email: emailInput.value,
             password: passwordInput.value
         });
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         authError.innerText = "Creating account...";
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await supabaseClient.auth.signUp({
             email: emailInput.value,
             password: passwordInput.value
         });
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Handle Logout (if we add a button somewhere)
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
         });
     }
 });

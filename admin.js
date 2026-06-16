@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const dashboardEl = document.getElementById("dashboard");
     const tbody = document.querySelector("#activityTable tbody");
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (!session) {
         statusEl.innerText = "Access Denied: You must be logged in.";
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         statusEl.innerText = "Loading analytics...";
         
         // Fetch all activity (requires RLS policy to allow this user)
-        const { data: activities, error } = await supabase
+        const { data: activities, error } = await supabaseClient
             .from('user_activity')
             .select('*')
             .order('created_at', { ascending: false })
