@@ -18,6 +18,13 @@
     <link rel="apple-touch-icon" href="https://matchup-pro.vercel.app/icons/icon128.png" />
     <meta name="apple-mobile-web-app-title" content="Matchup Pro" />
 
+    <script>
+        // If not running in a Chrome Extension environment, mark as web app for fluid scaling
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+            document.documentElement.classList.add('is-web-app');
+        }
+    </script>
+
     <!-- Twitter Card Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Matchup Pro – Smart Football Analytics" />
@@ -773,35 +780,41 @@
             }
         }
 
-        /* Mobile responsiveness for Vercel web deployment */
-        @media (max-width: 500px) {
-            body {
-                width: 100% !important;
-                min-width: 100vw;
+        /* Fluid responsiveness for iPad, Android, and Web up to 1024px */
+        /* We use .is-web-app to prevent these styles from breaking the Chrome Extension popup */
+        html.is-web-app body {
+            width: 100% !important;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 1024px) {
+            html.is-web-app body {
                 padding: 0;
             }
-            .container {
+            html.is-web-app .container {
                 width: 100% !important;
-                padding: 16px;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 24px 16px;
                 box-sizing: border-box;
             }
-            .controls-grid {
+            html.is-web-app .controls-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 16px;
             }
-            .action-buttons {
+            html.is-web-app .action-buttons {
                 flex-direction: column;
             }
-            input[type="text"], select {
+            html.is-web-app input[type="text"], html.is-web-app select {
                 width: 100%;
                 box-sizing: border-box;
             }
-            .left-panel {
+            html.is-web-app .left-panel {
                 width: 100%;
             }
-            #authOverlay > div {
+            html.is-web-app #authOverlay > div {
                 width: 90% !important;
-                max-width: 320px;
+                max-width: 400px;
                 box-sizing: border-box;
             }
         }
