@@ -2635,8 +2635,8 @@ function filterAndRenderPlayers() {
     });
     
     let html = `<div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;">
-      <div style="font-weight: 700; color: #a855f7; font-size: 13px; margin-bottom: 4px;">⭐ Projected Starters (V1)</div>
-      <div style="font-size: 11px; color: rgba(255,255,255,0.7);">Cumulative season stat tracking will unlock as the 2026 season progresses.</div>
+      <div style="font-weight: 700; color: #a855f7; font-size: 13px; margin-bottom: 4px;">⭐ Core Playmakers & Projected Starters</div>
+      <div style="font-size: 11px; color: rgba(255,255,255,0.7);">Primary offensive and defensive playmakers extracted from the active 53-man roster.</div>
     </div>`;
     
     const renderPosGroup = (pos, limit, title) => {
