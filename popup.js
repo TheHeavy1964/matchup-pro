@@ -1439,6 +1439,9 @@ async function loadFeaturedMatchups() {
   const isCFB = sport === "cfb";
   const endpoint = isCFB ? '/football/college-football/scoreboard' : '/football/nfl/scoreboard';
 
+  // Optimistically clear the grid to prevent stale data from lingering during tab switch
+  grid.innerHTML = '<div style="opacity:0.6; font-size:12px; text-align:center; padding: 10px;">Loading matchups...</div>';
+
   try {
     const data = await espnApi(endpoint);
     const events = data?.events || [];
@@ -1581,9 +1584,16 @@ async function initSelectors() {
       if (cfbWeekContainer) cfbWeekContainer.style.display = isCFB ? "block" : "none";
       if (nflWeekContainer) nflWeekContainer.style.display = isCFB ? "none" : "block";
       if (cfbSeasonTypeContainer) cfbSeasonTypeContainer.style.display = isCFB ? "block" : "none";
-      if (teamInput) teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
+      if (teamInput) {
+          teamInput.placeholder = isCFB ? "Search teams (e.g., Georgia)" : "Search teams (e.g., Cowboys)";
+          teamInput.value = ""; // Clear input on sport switch to prevent mixed searches
+      }
       if (analyticsNav) analyticsNav.style.display = "flex";
       updateAnalyticsDropdown(sport);
+      
+      // Clear output to prevent showing NFL data on CFB tab
+      const outputDiv = document.getElementById("output");
+      if (outputDiv) outputDiv.innerHTML = "";
       
       // Reload featured matchups for selected sport
       loadFeaturedMatchups();
@@ -1838,14 +1848,18 @@ async function main() {
       console.log('Find button clicked');
       
       try {
-        // Determine sport type based on active tab
+        // Determine sport type STRICTLY based on active tab
         const activeTab = document.querySelector('.sport-tab.active');
         const sportType = activeTab ? activeTab.dataset.sport : 'cfb';
+
+        // Force hidden select to match just in case
+        const hiddenSportType = document.getElementById("sportType");
+        if (hiddenSportType) hiddenSportType.value = sportType;
 
         const teamInput = $("#teamInput");
         const team = teamInput ? sanitizeTeamName(teamInput.value, sportType) : '';
         
-        console.log('Sport type:', sportType);
+        console.log('Sport type strictly resolved to:', sportType);
 
         if (!team) {
           console.log('No team entered');
