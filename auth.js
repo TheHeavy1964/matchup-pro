@@ -66,6 +66,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    // Handle Google Login
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener("click", async () => {
+            authError.innerText = "Redirecting to Google...";
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) {
+                authError.style.color = "#ff6b6b";
+                authError.innerText = error.message;
+            }
+        });
+    }
+
     // Handle Logout (if we add a button somewhere)
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
