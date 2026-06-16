@@ -10,7 +10,12 @@ async function getAppStorage(keys) {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     return new Promise(resolve => chrome.storage.sync.get(keys, resolve));
   }
-  const localData = localStorage.getItem('mockStorage');
+  let localData = null;
+  try {
+    localData = localStorage.getItem('mockStorage');
+  } catch (e) {
+    // Safari might throw SecurityError if cookies/storage are blocked
+  }
   let data;
   try {
     data = localData ? JSON.parse(localData) : mockStorage;
@@ -32,13 +37,21 @@ async function setAppStorage(obj) {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
     return new Promise(resolve => chrome.storage.sync.set(obj, resolve));
   }
-  const localData = localStorage.getItem('mockStorage');
+  let localData = null;
+  try {
+    localData = localStorage.getItem('mockStorage');
+  } catch (e) {}
+  
   let data = mockStorage;
   try {
     if (localData) data = JSON.parse(localData);
   } catch(e){}
+  
   Object.assign(data, obj);
-  localStorage.setItem('mockStorage', JSON.stringify(data));
+  
+  try {
+    localStorage.setItem('mockStorage', JSON.stringify(data));
+  } catch (e) {}
 }
 
 function openAppOptions() {
