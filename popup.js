@@ -939,17 +939,17 @@ function generateSmartAngle(isCFB, homeName, awayName, homeStats, awayStats, pre
   ];
   const hook = hooks[Math.floor(Math.random() * hooks.length)];
 
-  return \`
+  return `
     <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 16px; margin-top: 8px; margin-bottom: 16px; position: relative; z-index: 1;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
         <span style="font-size: 16px;">🧠</span>
         <span style="font-weight: 800; color: #c4b5fd; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Smart Angle Insight</span>
       </div>
       <div style="font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.9);">
-        <strong>\${hook}</strong> \${narrative}
+        <strong>${hook}</strong> ${narrative}
       </div>
     </div>
-  \`;
+  `;
 }
 
 function renderNFLSummary(game, homeStats, awayStats, prediction) {
