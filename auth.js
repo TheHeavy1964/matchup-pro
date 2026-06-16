@@ -50,15 +50,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
         authError.innerText = "Creating account...";
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email: emailInput.value,
             password: passwordInput.value
         });
         
         if (error) {
             authError.innerText = error.message;
+        } else if (data.session == null) {
+            authError.style.color = "#3b82f6";
+            authError.innerText = "Check your email for the confirmation link!";
         } else {
-            authError.innerText = "Success! You are now logged in.";
+            authError.style.color = "#2ecc71";
+            authError.innerText = "Success! Logging you in...";
         }
     });
 
