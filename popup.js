@@ -2418,6 +2418,10 @@ async function loadTeamRosterAndInjuries(teamName, sport) {
   const loaderEl = $("#playersLoader");
   const bodyEl = $("#playersBody");
   
+  if (typeof trackEvent === 'function') {
+      trackEvent('view_roster', sport, { team: teamName });
+  }
+
   if (loaderEl) loaderEl.style.display = "block";
   if (bodyEl) {
     bodyEl.style.display = "none";
