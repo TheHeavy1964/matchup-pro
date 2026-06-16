@@ -565,15 +565,100 @@ async function api(path) {
         isDemoMode = true;
         return getMockCFBDData(path);
       }
+      if (res.status === 429) {
+        console.warn(`[API Quota] CFBD monthly quota exceeded. Falling back to ESPN.`);
+        isDemoMode = true;
+        showQuotaBanner();
+        return await getESPNFallbackData(path);
+      }
       const text = await res.text();
       throw new Error(`API ${path} failed: ${res.status} ${res.statusText} — ${text}`);
     }
     isDemoMode = false;
     return res.json();
   } catch (error) {
-    console.warn(`[API Fallback] Error in API call: ${error.message}. Falling back to mock data.`);
+    console.warn(`[API Fallback] Error in API call: ${error.message}. Falling back.`);
     isDemoMode = true;
-    return getMockCFBDData(path);
+    return await getESPNFallbackData(path);
+  }
+}
+
+function showQuotaBanner() {
+  if (document.getElementById('quotaBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'quotaBanner';
+  banner.style.cssText = 'background: rgba(243, 156, 18, 0.15); border: 1px solid rgba(243, 156, 18, 0.3); border-radius: 8px; padding: 10px 14px; color: #f59e0b; font-size: 11px; line-height: 1.5; margin-bottom: 12px; text-align: center;';
+  banner.innerHTML = '⚡ <strong>CFBD API limit reached.</strong> Using ESPN data as fallback. Results may differ slightly.';
+  const output = document.getElementById('output');
+  if (output && output.parentNode) {
+    output.parentNode.insertBefore(banner, output);
+  }
+}
+
+async function getESPNFallbackData(cfbdPath) {
+  // Parse the CFBD path to extract parameters
+  try {
+    const url = new URL(cfbdPath, 'https://placeholder.com');
+    const params = url.searchParams;
+    const team = params.get('team');
+    const year = params.get('year') || new Date().getFullYear();
+    const week = params.get('week');
+
+    // Route to ESPN based on CFBD endpoint pattern
+    if (cfbdPath.includes('/games')) {
+      // Fetch CFB scoreboard from ESPN
+      let espnUrl = `/football/college-football/scoreboard?dates=${year}&week=${week || 1}`;
+      if (params.get('seasonType') === 'postseason') {
+        espnUrl += '&seasontype=3';
+      }
+      const data = await espnApi(espnUrl);
+      const events = data?.events || [];
+      
+      if (!team) return events;
+      
+      // Filter by team name and map ESPN format to CFBD-like format
+      const teamLower = team.toLowerCase();
+      const matched = events.filter(evt => {
+        const comp = evt.competitions?.[0];
+        const names = comp?.competitors?.map(c => c.team?.displayName?.toLowerCase() || '') || [];
+        return names.some(n => n.includes(teamLower));
+      });
+
+      return matched.map(evt => {
+        const comp = evt.competitions?.[0];
+        const homeTeam = comp?.competitors?.find(c => c.homeAway === 'home');
+        const awayTeam = comp?.competitors?.find(c => c.homeAway === 'away');
+        return {
+          id: evt.id,
+          season: parseInt(year),
+          week: parseInt(week) || 1,
+          home_team: homeTeam?.team?.displayName || 'Home',
+          away_team: awayTeam?.team?.displayName || 'Away',
+          home_points: parseInt(homeTeam?.score) || 0,
+          away_points: parseInt(awayTeam?.score) || 0,
+          venue: comp?.venue?.fullName || '',
+          start_date: evt.date,
+          season_type: params.get('seasonType') || 'regular',
+          status: evt.status?.type?.description || ''
+        };
+      });
+    }
+
+    // For non-game endpoints (ratings, stats, betting), return safe defaults
+    if (cfbdPath.includes('/ratings') || cfbdPath.includes('/ppa')) {
+      return [];
+    }
+    if (cfbdPath.includes('/lines') || cfbdPath.includes('/betting')) {
+      return [];
+    }
+    if (cfbdPath.includes('/stats')) {
+      return [];
+    }
+    
+    return getMockCFBDData(cfbdPath);
+  } catch (e) {
+    console.warn('[ESPN Fallback] Failed:', e.message);
+    return getMockCFBDData(cfbdPath);
   }
 }
 
