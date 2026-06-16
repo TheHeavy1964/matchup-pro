@@ -1,52 +1,52 @@
-if (typeof chrome === 'undefined' || !chrome.storage) {
-  const mockStorage = {
-    apiKey: "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA",
-    isPremium: false,
-    stripeEmail: "",
-    defaultYear: "2024",
-    defaultWeek: "1"
-  };
-  window.chrome = {
-    storage: {
-      sync: {
-        get: (keys) => {
-          const localData = localStorage.getItem('mockStorage');
-          let data;
-          try {
-            data = localData ? JSON.parse(localData) : mockStorage;
-          } catch (e) {
-            data = mockStorage;
-          }
-          const result = {};
-          if (Array.isArray(keys)) {
-            keys.forEach(k => result[k] = data[k]);
-          } else if (typeof keys === 'string') {
-            result[keys] = data[keys];
-          } else {
-            Object.assign(result, keys);
-          }
-          return Promise.resolve(result);
-        },
-        set: (obj) => {
-          const localData = localStorage.getItem('mockStorage');
-          let data;
-          try {
-            data = localData ? JSON.parse(localData) : mockStorage;
-          } catch (e) {
-            data = mockStorage;
-          }
-          Object.assign(data, obj);
-          localStorage.setItem('mockStorage', JSON.stringify(data));
-          return Promise.resolve();
-        }
-      }
-    },
-    runtime: {
-      openOptionsPage: () => {
-        window.open('options.html', '_blank');
-      }
-    }
-  };
+const mockStorage = {
+  apiKey: "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA",
+  isPremium: false,
+  stripeEmail: "",
+  defaultYear: "2024",
+  defaultWeek: "1"
+};
+
+async function getAppStorage(keys) {
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+    return new Promise(resolve => chrome.storage.sync.get(keys, resolve));
+  }
+  const localData = localStorage.getItem('mockStorage');
+  let data;
+  try {
+    data = localData ? JSON.parse(localData) : mockStorage;
+  } catch (e) {
+    data = mockStorage;
+  }
+  const result = {};
+  if (Array.isArray(keys)) {
+    keys.forEach(k => result[k] = data[k]);
+  } else if (typeof keys === 'string') {
+    result[keys] = data[keys];
+  } else {
+    Object.assign(result, keys);
+  }
+  return result;
+}
+
+async function setAppStorage(obj) {
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+    return new Promise(resolve => chrome.storage.sync.set(obj, resolve));
+  }
+  const localData = localStorage.getItem('mockStorage');
+  let data = mockStorage;
+  try {
+    if (localData) data = JSON.parse(localData);
+  } catch(e){}
+  Object.assign(data, obj);
+  localStorage.setItem('mockStorage', JSON.stringify(data));
+}
+
+function openAppOptions() {
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    window.open("options.html", "_blank");
+  }
 }
 
 const $ = (s) => document.querySelector(s);
@@ -61,7 +61,7 @@ const ESPN_API_BASE = "https://site.api.espn.com/apis/site/v2/sports";
 let isDemoMode = false;
 
 async function getApiKey() {
-  const { apiKey } = await chrome.storage.sync.get(["apiKey"]);
+  const { apiKey } = await getAppStorage(["apiKey"]);
   if (!apiKey || apiKey === "test-cfbd-key" || apiKey === "test-valid-key" || apiKey === "3db1e9c835b04d898461abb034c6c858") {
     return "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA";
   }
@@ -183,7 +183,7 @@ async function attachShareBtnListener() {
   // Share Card Generation (html2canvas)
   shareCardBtn.addEventListener("click", async () => {
     console.log('Share card button clicked');
-    const { isPremium } = await chrome.storage.sync.get(["isPremium"]);
+    const { isPremium } = await getAppStorage(["isPremium"]);
     if (!isPremium) {
       // Show Upgrade CTA card
       if (!$("#goProPromoBtn")) {
@@ -203,7 +203,7 @@ async function attachShareBtnListener() {
           container.innerHTML = promoHtml;
           const promoBtn = $("#goProPromoBtn");
           if (promoBtn) {
-            promoBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+            promoBtn.addEventListener("click", () => openAppOptions());
           }
         }
       }
@@ -1666,7 +1666,7 @@ async function initSelectors() {
     });
   });
 
-  const { defaultYear, defaultWeek } = await chrome.storage.sync.get(["defaultYear", "defaultWeek"]);
+  const { defaultYear, defaultWeek } = await getAppStorage(["defaultYear", "defaultWeek"]);
   if (defaultYear && yearSel) yearSel.value = defaultYear;
   if (defaultWeek !== undefined && weekSel) {
     weekSel.value = defaultWeek;
@@ -1681,10 +1681,10 @@ async function initReferralWidget() {
   if (!widget) return;
 
   // Retrieve referral code or create one
-  let { referralCode, isPremium } = await chrome.storage.sync.get(["referralCode", "isPremium"]);
+  let { referralCode, isPremium } = await getAppStorage(["referralCode", "isPremium"]);
   if (!referralCode) {
     referralCode = "ref-" + Math.random().toString(36).substring(2, 10);
-    await chrome.storage.sync.set({ referralCode });
+    await setAppStorage({ referralCode });
   }
 
   const referralUrl = `https://matchuppro.vercel.app/?ref=${referralCode}`;
@@ -1807,7 +1807,7 @@ async function main() {
   loadFeaturedMatchups();
 
   // Premium Status Initialization
-  const { isPremium } = await chrome.storage.sync.get(["isPremium"]);
+  const { isPremium } = await getAppStorage(["isPremium"]);
   const premiumBadge = $("#premiumBadge");
   if (premiumBadge) {
     if (isPremium) {
@@ -1823,7 +1823,7 @@ async function main() {
       premiumBadge.title = "Click to activate premium features";
     }
     premiumBadge.addEventListener("click", () => {
-      chrome.runtime.openOptionsPage();
+      openAppOptions();
     });
   }
 
@@ -1835,7 +1835,7 @@ async function main() {
     }
 
     copyScriptBtn.addEventListener('click', async () => {
-      const { isPremium: currentIsPremium } = await chrome.storage.sync.get(["isPremium"]);
+      const { isPremium: currentIsPremium } = await getAppStorage(["isPremium"]);
       if (!currentIsPremium) {
         // Show Upgrade CTA card at top of output
         const output = $("#output");
@@ -1856,7 +1856,7 @@ async function main() {
             
             const promoBtn = $("#goProPromoBtn");
             if (promoBtn) {
-              promoBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+              promoBtn.addEventListener("click", () => openAppOptions());
             }
           }
           output.scrollIntoView({ behavior: 'smooth' });
@@ -1889,11 +1889,7 @@ async function main() {
   const openOptions = $("#openOptions");
   if (openOptions) {
     openOptions.addEventListener("click", () => {
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        window.open("options.html", "_blank");
-      }
+      openAppOptions();
     });
   }
 
