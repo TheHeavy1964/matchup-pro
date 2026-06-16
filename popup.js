@@ -2269,6 +2269,7 @@ function initPlayersExplorer() {
   const playersContainer = $("#playersContainer");
   
   const playersTabRoster = $("#playersTabRoster");
+  const playersTabLeaders = $("#playersTabLeaders");
   const playersTabInjuries = $("#playersTabInjuries");
   const playerListFilter = $("#playerListFilter");
   
@@ -2300,11 +2301,24 @@ function initPlayersExplorer() {
     });
   }
   
-  if (playersTabRoster && playersTabInjuries) {
+  if (playersTabRoster && playersTabLeaders && playersTabInjuries) {
     playersTabRoster.addEventListener("click", () => {
       playersActiveTab = "roster";
       playersTabRoster.style.background = "#a855f7";
       playersTabRoster.style.color = "#fff";
+      playersTabLeaders.style.background = "transparent";
+      playersTabLeaders.style.color = "rgba(255,255,255,0.7)";
+      playersTabInjuries.style.background = "transparent";
+      playersTabInjuries.style.color = "rgba(255,255,255,0.7)";
+      filterAndRenderPlayers();
+    });
+
+    playersTabLeaders.addEventListener("click", () => {
+      playersActiveTab = "leaders";
+      playersTabLeaders.style.background = "#a855f7";
+      playersTabLeaders.style.color = "#fff";
+      playersTabRoster.style.background = "transparent";
+      playersTabRoster.style.color = "rgba(255,255,255,0.7)";
       playersTabInjuries.style.background = "transparent";
       playersTabInjuries.style.color = "rgba(255,255,255,0.7)";
       filterAndRenderPlayers();
@@ -2316,6 +2330,8 @@ function initPlayersExplorer() {
       playersTabInjuries.style.color = "#fff";
       playersTabRoster.style.background = "transparent";
       playersTabRoster.style.color = "rgba(255,255,255,0.7)";
+      playersTabLeaders.style.background = "transparent";
+      playersTabLeaders.style.color = "rgba(255,255,255,0.7)";
       filterAndRenderPlayers();
     });
   }
@@ -2599,6 +2615,56 @@ function filterAndRenderPlayers() {
       });
       html += `</div>`;
     });
+    
+    bodyEl.innerHTML = html;
+  } else if (playersActiveTab === "leaders") {
+    if (currentRosterPlayers.length === 0) {
+      bodyEl.innerHTML = `<div style="opacity: 0.7; text-align: center; padding: 20px 0; font-size: 12px;">No players loaded. Click a team button or search above.</div>`;
+      return;
+    }
+    
+    // V1 Projected Starters: Filter roster for key positions
+    const keyPositions = ["QB", "RB", "WR", "TE", "DL", "DE", "LB", "CB", "S"];
+    const starters = currentRosterPlayers.filter(p => keyPositions.includes(p.position.toUpperCase()));
+    
+    // Group by position
+    const posGroups = {};
+    starters.forEach(p => {
+      if (!posGroups[p.position]) posGroups[p.position] = [];
+      posGroups[p.position].push(p);
+    });
+    
+    let html = `<div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;">
+      <div style="font-weight: 700; color: #a855f7; font-size: 13px; margin-bottom: 4px;">⭐ Projected Starters (V1)</div>
+      <div style="font-size: 11px; color: rgba(255,255,255,0.7);">Cumulative season stat tracking will unlock as the 2026 season progresses.</div>
+    </div>`;
+    
+    const renderPosGroup = (pos, limit, title) => {
+      if (!posGroups[pos] || posGroups[pos].length === 0) return "";
+      let groupHtml = `<div style="font-weight: 700; font-size: 12px; color: #3b82f6; margin: 12px 0 6px; text-transform: uppercase; border-bottom: 1px solid rgba(59, 130, 246, 0.2); padding-bottom: 2px;">${title}</div>`;
+      groupHtml += `<div style="display: grid; grid-template-columns: 1fr; gap: 6px;">`;
+      posGroups[pos].slice(0, limit).forEach(p => {
+        const headshot = p.logo ? `<img src="${p.logo}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); margin-right: 8px;">` : `<div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.08); margin-right: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">#</div>`;
+        groupHtml += `
+          <div style="display: flex; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; font-size: 12px;">
+            ${headshot}
+            <span style="font-weight: 600; color: #fff; flex: 1;">${p.name}</span>
+            <span style="font-size: 11px; opacity: 0.7; margin-right: 12px;">#${p.jersey}</span>
+            <span style="font-weight: 700; color: #a855f7; font-size: 11px; background: rgba(168, 85, 247, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(168, 85, 247, 0.2);">${p.position}</span>
+          </div>
+        `;
+      });
+      groupHtml += `</div>`;
+      return groupHtml;
+    };
+    
+    html += renderPosGroup("QB", 2, "Quarterbacks");
+    html += renderPosGroup("RB", 2, "Running Backs");
+    html += renderPosGroup("WR", 3, "Wide Receivers");
+    html += renderPosGroup("TE", 1, "Tight Ends");
+    html += renderPosGroup("LB", 3, "Linebackers");
+    html += renderPosGroup("CB", 2, "Cornerbacks");
+    html += renderPosGroup("S", 2, "Safeties");
     
     bodyEl.innerHTML = html;
   } else {
