@@ -888,6 +888,57 @@ function fmtRecord(record) {
   return record || "—";
 }
 
+function generateSmartAngle(isCFB, homeName, awayName, homeStats, awayStats, prediction) {
+  let narrative = "";
+  
+  if (isCFB) {
+    const homeSuccess = parseFloat(homeStats?.stat?.offense?.successRate) || parseFloat(homeStats?.offense?.successRate) || 0;
+    const awayDefSuccess = parseFloat(awayStats?.stat?.defense?.successRate) || parseFloat(awayStats?.defense?.successRate) || 0;
+    
+    if (homeSuccess > awayDefSuccess * 1.1 && homeSuccess > 0) {
+       narrative = `The media is overlooking how easily ${homeName} stays ahead of the chains. Their offensive success rate dominates ${awayName}'s defensive efficiency, creating a mismatch in the trenches.`;
+    } else if (awayDefSuccess > homeSuccess && awayDefSuccess > 0) {
+       narrative = `Nobody is talking about how well ${awayName}'s defense aligns against this scheme. Their ability to limit explosive plays could quietly neutralize ${homeName}'s primary offensive weapon.`;
+    } else {
+       narrative = `While everyone is focused on the quarterbacks, the real hidden edge here is situational coaching. ${homeName} has historically leveraged bye weeks and home-field momentum to over-perform in these exact divisional spots.`;
+    }
+  } else {
+    // NFL logic
+    const homePassYds = parseFloat(homeStats?.offensive?.passingYardsPerGame) || parseFloat(homeStats?.passingYards) || 0;
+    const awayRushYds = parseFloat(awayStats?.offensive?.rushingYardsPerGame) || parseFloat(awayStats?.rushingYards) || 0;
+    
+    if (homePassYds > 240) {
+      narrative = `While public money focuses on the spread, the real story is ${homeName}'s aerial attack. They are consistently attacking the seams, creating a severe schematic disadvantage for ${awayName}'s secondary.`;
+    } else if (awayRushYds > 120) {
+      narrative = `The hidden edge here belongs to ${awayName}'s ground game. They have quietly established a run-heavy identity that perfectly exploits the gaps in ${homeName}'s defensive front, allowing them to control the clock.`;
+    } else {
+      const winner = prediction?.winner || homeName;
+      const loser = winner === homeName ? awayName : homeName;
+      narrative = `Nobody is talking about the coaching mismatch in high-leverage situations. ${winner}'s staff has been flawless in second-half adjustments, giving them a massive hidden advantage over ${loser}.`;
+    }
+  }
+  
+  const hooks = [
+    "The sharp money knows something the public doesn't:",
+    "Here is the angle nobody is talking about:",
+    "Look past the box score. The hidden edge is clear:",
+    "While the media is distracted, the numbers show a different story:"
+  ];
+  const hook = hooks[Math.floor(Math.random() * hooks.length)];
+
+  return \`
+    <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 16px; margin-top: 8px; margin-bottom: 16px; position: relative; z-index: 1;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 16px;">🧠</span>
+        <span style="font-weight: 800; color: #c4b5fd; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Smart Angle Insight</span>
+      </div>
+      <div style="font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.9);">
+        <strong>\${hook}</strong> \${narrative}
+      </div>
+    </div>
+  \`;
+}
+
 function renderNFLSummary(game, homeStats, awayStats, prediction) {
   const spreadText = game.odds?.details || "—";
   const gameDate = new Date(game.date).toLocaleString();
@@ -1036,6 +1087,8 @@ function renderNFLSummary(game, homeStats, awayStats, prediction) {
           </div>
         </div>
       </div>
+
+      ${generateSmartAngle(false, game.homeTeam, game.awayTeam, homeStats, awayStats, prediction)}
 
       <!-- Game Details Info Grid -->
       <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1;">
@@ -1264,6 +1317,8 @@ function renderCFBSummary({ game, ratings, homeStats, awayStats, betting, predic
           </div>
         </div>
       </div>
+
+      ${generateSmartAngle(true, home, away, homeStats, awayStats, prediction)}
 
       <!-- Game Details Info Grid -->
       <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1;">
