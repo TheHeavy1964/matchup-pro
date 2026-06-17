@@ -43,6 +43,21 @@
         <div id="status" class="muted"></div>
       </div>
 
+      <div class="card" id="pricingCard">
+        <h3>Season Pass Pricing</h3>
+        <p class="small muted" style="margin-bottom: 12px;">Lock in your Season Pass early to save. Prices increase automatically as the season progresses.</p>
+        
+        <div id="dynamicPricingContainer" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <div class="row" style="justify-content: center;">
+          <a id="stripeBuyLink" href="https://buy.stripe.com/5kQ14p4VngssagQ1lm24006" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; text-align: center; width: 100%; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+            Get Season Pass Now
+          </a>
+        </div>
+      </div>
+
       <div class="card">
         <h3>Premium Activation (Stripe)</h3>
         <div id="premiumStatus" class="inactive">

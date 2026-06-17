@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Football Matchup Finder",
+  "version": "1.0",
+  "description": "CFB & NFL Matchup Finder with predictions",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage"
+  ]
+}

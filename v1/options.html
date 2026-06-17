@@ -1,0 +1,37 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CFB Matchup Finder – Options</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Settings</h1>
+    <div class="card">
+      <label for="apiKey">CollegeFootballData API Key</label>
+      <input id="apiKey" type="password" placeholder="Paste your API key here" />
+      <p class="note small">Get a free key at collegefootballdata.com. Your key is stored locally via chrome.storage.</p>
+      <div class="row">
+        <button id="saveBtn">Save</button>
+      </div>
+      <div id="status" class="muted"></div>
+    </div>
+    <div class="card">
+      <h3 class="small">Defaults</h3>
+      <div class="row">
+        <label class="small">Default Year</label>
+        <input id="defaultYear" type="number" min="2000" max="2100" />
+      </div>
+      <div class="row">
+        <label class="small">Default Week (optional)</label>
+        <input id="defaultWeek" type="number" min="0" max="20" />
+      </div>
+      <div class="row">
+        <button id="saveDefaults">Save Defaults</button>
+      </div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

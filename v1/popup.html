@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CFB & NFL Matchup Finder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>CFB & NFL Matchup Finder</h1>
+    
+    <!-- Sport Selection -->
+    <div class="row">
+      <select id="sportType">
+        <option value="cfb">College Football</option>
+        <option value="nfl">NFL</option>
+      </select>
+    </div>
+    
+    <!-- Team Input -->
+    <div class="row">
+      <input id="teamInput" type="text" placeholder="Enter team (e.g., Georgia or Cowboys)" />
+    </div>
+    
+    <!-- CFB-specific controls -->
+    <div id="cfbControls">
+      <div class="row">
+        <select id="year"></select>
+        <select id="seasonType">
+          <option value="regular">Regular</option>
+          <option value="postseason">Postseason</option>
+        </select>
+        <select id="week"></select>
+      </div>
+    </div>
+    
+    <!-- NFL-specific controls -->
+    <div id="nflControls" style="display: none;">
+      <div class="row">
+        <select id="nflWeek"></select>
+        <select id="nflSeasonType">
+          <option value="2">Regular Season</option>
+          <option value="3">Playoffs</option>
+          <option value="1">Preseason</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="row">
+      <button id="findBtn">Find Matchup</button>
+      <button id="openOptions" class="secondary">Settings</button>
+    </div>
+    <div id="loader" class="loader">Working...</div>
+    <div id="output"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

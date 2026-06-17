@@ -1,5 +1,5 @@
 const mockStorage = {
-  apiKey: "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA",
+  apiKey: "sPvlz6/2WFrMOb71/GS/KhpgLdWDxJhAQwBiaJLeSrPxRgtpYhvvezCF8pJvilA9",
   isPremium: false,
   stripeEmail: "",
   defaultYear: "2024",
@@ -64,6 +64,51 @@ function openAppOptions() {
 
 const $ = (s) => document.querySelector(s);
 
+function getPricingPhase() {
+  const SEASON_START_DATE = new Date("2026-08-24T00:00:00Z"); 
+  const now = new Date();
+  const diffTime = now - SEASON_START_DATE;
+  const days = diffTime > 0 ? Math.floor(diffTime / (1000 * 60 * 60 * 24)) : 0;
+
+  if (days <= 20) {
+    return {
+      phase: 1,
+      standalonePrice: "$3.99",
+      seasonPassPrice: "$19.99",
+      pitchTitle: "The \"No-Brainer\" Early Bird",
+      pitchText: "Price increases to $8.99, $14.99, and $19.99 later this season. Buy the Pass now for $19.99 and save over 60%.",
+      badgeText: "Early Bird"
+    };
+  } else if (days <= 40) {
+    return {
+      phase: 2,
+      standalonePrice: "$8.99",
+      seasonPassPrice: "$24.99",
+      pitchTitle: "The \"Last Chance\" Value",
+      pitchText: "Lock in full access before the mid-season price spike.",
+      badgeText: "Best Value"
+    };
+  } else if (days <= 60) {
+    return {
+      phase: 3,
+      standalonePrice: "$14.99",
+      seasonPassPrice: "$14.99",
+      pitchTitle: "The \"Equalizer\"",
+      pitchText: "Same price as one month, but covers the whole rest of the season. A true force multiplier.",
+      badgeText: "Equalizer"
+    };
+  } else {
+    return {
+      phase: 4,
+      standalonePrice: "$19.99",
+      seasonPassPrice: "$9.99",
+      pitchTitle: "The \"Stretch Run\" Pass",
+      pitchText: "Time is running out. Get the rest of the season for just $9.99!",
+      badgeText: "Stretch Run"
+    };
+  }
+}
+
 // Global state for Copy-Script feature
 let lastGame = null;
 let lastSportType = null;
@@ -76,7 +121,7 @@ let isDemoMode = false;
 async function getApiKey() {
   const { apiKey } = await getAppStorage(["apiKey"]);
   if (!apiKey || apiKey === "test-cfbd-key" || apiKey === "test-valid-key" || apiKey === "3db1e9c835b04d898461abb034c6c858") {
-    return "GHP727ErgsO9BFzeR+G7gsLtn4TePbsetr2ale2LpFHeBhDpDU14895gxItsRqaA";
+    return "sPvlz6/2WFrMOb71/GS/KhpgLdWDxJhAQwBiaJLeSrPxRgtpYhvvezCF8pJvilA9";
   }
   return apiKey;
 }
@@ -200,14 +245,26 @@ async function attachShareBtnListener() {
     if (!isPremium) {
       // Show Upgrade CTA card
       if (!$("#goProPromoBtn")) {
+        const pricing = getPricingPhase();
         const promoHtml = `
           <div id="proPromoCard" style="background: rgba(243, 156, 18, 0.15); border: 2px solid rgba(243, 156, 18, 0.5); border-radius: 12px; padding: 16px; margin-top: 12px; text-align: center; color: white;">
             <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px;">📸 Unlock Matchup Card Export (Pro)</div>
             <div style="font-size: 12px; line-height: 1.5; margin-bottom: 12px; opacity: 0.9;">
               Export gorgeous, high-resolution matchup cards directly to PNG for sharing on Twitter, Instagram, or your sports blog.
             </div>
-            <button id="goProPromoBtn" style="background: #f39c12; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; font-size: 13px;">
-              Upgrade to Pro
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: left; border: 1px solid rgba(243, 156, 18, 0.3);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: #f39c12; font-size: 13px;">🏈 Season Pass: ${pricing.seasonPassPrice}</span>
+                <span style="background: #f39c12; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">${pricing.badgeText}</span>
+              </div>
+              <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
+                <strong style="color: #fff;">${pricing.pitchTitle}:</strong> ${pricing.pitchText}
+              </div>
+            </div>
+
+            <button id="goProPromoBtn" style="background: #f39c12; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; font-size: 13px; width: 100%;">
+              Get the Season Pass
             </button>
           </div>
         `;

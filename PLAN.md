@@ -90,8 +90,21 @@
 
 ---
 
+### Milestone 13: Dynamic Season Pass Pricing Strategy
+- [x] Implement `getPricingPhase()` function computing pricing tiers from season start date (Aug 24, 2026).
+- [x] Phase 1 (Days 1–20): "Early Bird" — $19.99 pass vs $3.99 standalone with 60%+ savings pitch.
+- [x] Phase 2 (Days 21–40): "Last Chance Value" — $24.99 pass vs $8.99 standalone with mid-season urgency.
+- [x] Phase 3 (Days 41–60): "Equalizer" — $14.99 pass = $14.99 standalone, full-season coverage force multiplier.
+- [x] Phase 4 (Day 61+): "Stretch Run" — $9.99 impulse buy pass vs $19.99 standalone for playoff stretch.
+- [x] Add Season Pass Pricing card to `options.html` with dynamic pricing container and CTA link.
+- [x] Render pricing in `options.js` `restore()` with phase-aware badge, pitch title, and pitch text.
+- [x] Embed Season Pass pricing pitch into the popup.js upgrade CTA card (shown when free users hit gated features).
+- [x] Auto-hide pricing card on options page for users who are already premium.
+
+---
+
 ## 🚀 Current Trajectory
-We have successfully resolved the NFL Standings year discrepancy bug where the standings panel displayed the current calendar year (2026) instead of the selected matchup season (2025). This was caused by the lack of a `season` mapping in the returned object of `findNFLGame`. The fix has been fully verified and is live on the Vercel production app (`https://matchup-pro.vercel.app/`).
+Implemented the 4-phase dynamic Season Pass pricing strategy across both the Chrome extension popup (upgrade CTA) and the Vercel-hosted options/settings page. Pricing automatically adjusts based on days elapsed since the 2026 CFB season start date, with strategic anchoring copy for each phase. Ready for git push → Vercel deployment.
 
 ---
 
@@ -99,4 +112,4 @@ We have successfully resolved the NFL Standings year discrepancy bug where the s
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| **Antigravity** | Resolve NFL Standings year discrepancy and deploy production updates | 🟢 Completed |
+| **Antigravity** | Implement dynamic Season Pass pricing strategy (4-phase) | 🟢 Completed |
