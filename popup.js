@@ -1982,6 +1982,40 @@ async function main() {
     });
   }
 
+  // Season Pass Banner Management
+  const seasonPassBanner = $("#seasonPassBanner");
+  if (seasonPassBanner) {
+    if (isPremium) {
+      seasonPassBanner.style.display = "none";
+    } else {
+      seasonPassBanner.style.display = "block";
+      const pricing = getPricingPhase();
+      const bannerPassPrice = $("#bannerPassPrice");
+      const bannerBadge = $("#bannerBadge");
+      const bannerPitch = $("#bannerPitch");
+      
+      if (bannerPassPrice) bannerPassPrice.textContent = `Season Pass: ${pricing.seasonPassPrice}`;
+      if (bannerBadge) bannerBadge.textContent = pricing.badgeText;
+      if (bannerPitch) {
+        bannerPitch.innerHTML = `<strong>${pricing.pitchTitle}:</strong> ${pricing.pitchText}`;
+      }
+      
+      // Clicking the banner or the button within opens the settings page
+      seasonPassBanner.addEventListener("click", (e) => {
+        openAppOptions();
+      });
+      
+      const bannerBuyLink = $("#bannerBuyLink");
+      if (bannerBuyLink) {
+        bannerBuyLink.addEventListener("click", (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          openAppOptions();
+        });
+      }
+    }
+  }
+
   // Copy Script button
   const copyScriptBtn = $('#copyScriptBtn');
   if (copyScriptBtn) {

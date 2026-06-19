@@ -955,6 +955,25 @@
                 </div>
             </div>
 
+            <!-- Season Pass Banner (hidden for premium users, populated by JS) -->
+            <div id="seasonPassBanner" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.08) 100%); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; cursor: pointer; transition: all 0.3s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">🏈</span>
+                        <span id="bannerPassPrice" style="font-size: 15px; font-weight: 700; color: #10b981;">Season Pass: $19.99</span>
+                    </div>
+                    <span id="bannerBadge" style="background: #10b981; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Early Bird</span>
+                </div>
+                <div id="bannerPitch" style="font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.4; margin-bottom: 8px;">
+                    Price increases to $8.99, $14.99, and $19.99 later this season. Lock in now and save over 60%.
+                </div>
+                <div style="text-align: center;">
+                    <a id="bannerBuyLink" href="#" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 8px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: transform 0.2s;">
+                        Get Season Pass →
+                    </a>
+                </div>
+            </div>
+
             <div class="action-buttons">
                 <button class="btn btn-primary" id="findBtn">
                     <span>🔍</span> Find Matchup
