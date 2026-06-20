@@ -181,6 +181,26 @@ function updatePremiumUI(isPremium, email) {
 
 restore();
 
+// Back to Dashboard / Close Tab navigation handler
+const backBtn = $("#backBtn");
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.getCurrent((tab) => {
+        if (tab) {
+          chrome.tabs.remove(tab.id);
+        } else {
+          window.close();
+        }
+      });
+    } else {
+      window.location.href = "/";
+    }
+  });
+}
+
 // Save & Validate CFBD API Key
 $("#saveBtn").addEventListener("click", async () => {
   const apiKey = $("#apiKey").value.trim();
