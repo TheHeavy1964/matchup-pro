@@ -50,8 +50,8 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
 }
 
 // Stripe Billing Configuration
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/5kQ14p4VngssagQ1lm24006";
-const STRIPE_SEASON_PASS_LINK = "https://buy.stripe.com/YOUR_ONE_TIME_SEASON_PASS_LINK"; // TODO: Replace with your one-time Season Pass payment link from Stripe
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJedRb5Zrgss4Wwfcc24007";
+const STRIPE_SEASON_PASS_LINK = "https://buy.stripe.com/bJedRb5Zrgss4Wwfcc24007";
 const VERIFICATION_API_URL = "https://matchup-pro.vercel.app/api/verify-stripe"; // Replace with your backend URL
 
 const $ = (s) => document.querySelector(s);
