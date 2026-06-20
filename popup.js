@@ -1,3 +1,8 @@
+// Environment check: if not in extension, mark as web app for styling
+if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+  document.documentElement.classList.add('is-web-app');
+}
+
 const mockStorage = {
   apiKey: "sPvlz6/2WFrMOb71/GS/KhpgLdWDxJhAQwBiaJLeSrPxRgtpYhvvezCF8pJvilA9",
   isPremium: false,
