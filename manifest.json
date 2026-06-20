@@ -18,7 +18,8 @@
   },
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "clipboardWrite",
+    "identity"
   ],
   "host_permissions": [
     "https://api.collegefootballdata.com/*",
