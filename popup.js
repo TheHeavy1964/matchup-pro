@@ -2087,6 +2087,13 @@ async function main() {
     });
   }
 
+  const navSettingsBtn = $("#navSettingsBtn");
+  if (navSettingsBtn) {
+    navSettingsBtn.addEventListener("click", () => {
+      openAppOptions();
+    });
+  }
+
   const findBtn = $("#findBtn");
   if (findBtn) {
     findBtn.addEventListener("click", async () => {
