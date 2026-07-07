@@ -39,6 +39,9 @@ module.exports = async (req, res) => {
                     case 'get_team_advanced_stats':
                         result = await getTeamAdvancedStats(parsedArgs);
                         break;
+                    case 'get_nfl_advanced_stats':
+                        result = await getNflAdvancedStats(parsedArgs);
+                        break;
                     case 'get_player_injury_status':
                         result = await getPlayerInjuryStatus(parsedArgs);
                         break;
@@ -69,19 +72,96 @@ module.exports = async (req, res) => {
 // --- Tool Implementations (Stubs to be expanded in Phase 2) ---
 
 async function getTeamAdvancedStats(args) {
-    const { team, sport, year } = args;
-    // TODO: Implement actual CFBD / SportsDataIO fetching here
-    console.log(`Fetching advanced stats for ${team} (${sport}) in ${year || 'current year'}`);
+    const { team, year } = args;
+    const targetYear = year || new Date().getFullYear();
+    const cfbdApiKey = process.env.CFBD_API_KEY;
+
+    if (!cfbdApiKey) {
+        console.warn('Missing CFBD_API_KEY in environment');
+        return { error: 'API configuration missing on backend.' };
+    }
+
+    console.log(`Fetching advanced stats for ${team} in ${targetYear}`);
     
-    // Mock response to feed back to the LLM
-    return {
-        team: team,
-        sport: sport,
-        spPlusRanking: 5,
-        epaPerPlay: 0.28,
-        successRate: "48%",
-        narrative: `${team} has an elite offense this season, ranking top 5 in SP+ and dominating third downs.`
-    };
+    try {
+        // Fetch SP+ ratings from CFBD
+        const response = await fetch(`https://api.collegefootballdata.com/ratings/sp?year=${targetYear}&team=${encodeURIComponent(team)}`, {
+            headers: {
+                'Authorization': `Bearer ${cfbdApiKey}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            return { error: `CFBD API returned ${response.status}` };
+        }
+
+        const data = await response.json();
+        
+        if (!data || data.length === 0) {
+            return { message: `No SP+ advanced stats found for ${team} in ${targetYear}.` };
+        }
+
+        const teamData = data[0];
+
+        // Return a highly condensed payload for the LLM
+        return {
+            team: teamData.team,
+            year: teamData.year,
+            overall_sp_plus_rating: teamData.rating,
+            national_ranking: teamData.ranking,
+            offensive_rating: teamData.offense?.rating,
+            defensive_rating: teamData.defense?.rating
+        };
+    } catch (error) {
+        console.error('CFBD Fetch Error:', error);
+        return { error: 'Failed to fetch data from CFBD.' };
+    }
+}
+
+async function getNflAdvancedStats(args) {
+    const { team_abbreviation, year } = args;
+    const targetYear = year || new Date().getFullYear();
+    const sdioApiKey = process.env.SPORTS_DATA_IO_KEY;
+
+    if (!sdioApiKey) {
+        console.warn('Missing SPORTS_DATA_IO_KEY in environment');
+        return { error: 'NFL API configuration missing on backend.' };
+    }
+
+    console.log(`Fetching NFL stats for ${team_abbreviation} in ${targetYear}`);
+    
+    try {
+        // SportsDataIO NFL Team Season Stats endpoint (using standard regular season)
+        const response = await fetch(`https://api.sportsdata.io/v3/nfl/scores/json/TeamSeasonStats/${targetYear}REG?key=${sdioApiKey}`);
+
+        if (!response.ok) {
+            return { error: `SportsDataIO API returned ${response.status}` };
+        }
+
+        const data = await response.json();
+        
+        // Find the specific team by abbreviation (e.g., 'DAL', 'KC')
+        const teamData = data.find(t => t.Team.toLowerCase() === team_abbreviation.toLowerCase());
+
+        if (!teamData) {
+            return { message: `No NFL stats found for team abbreviation ${team_abbreviation}.` };
+        }
+
+        // Return a condensed payload for the LLM
+        return {
+            team: teamData.TeamName,
+            abbreviation: teamData.Team,
+            total_points_scored: teamData.Score,
+            passing_yards: teamData.PassingYards,
+            rushing_yards: teamData.RushingYards,
+            turnover_differential: teamData.TurnoverDifferential,
+            third_down_percentage: teamData.ThirdDownPercentage
+        };
+    } catch (error) {
+        console.error('SportsDataIO Fetch Error:', error);
+        return { error: 'Failed to fetch data from SportsDataIO.' };
+    }
 }
 
 async function getPlayerInjuryStatus(args) {

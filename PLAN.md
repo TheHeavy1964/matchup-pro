@@ -27,6 +27,6 @@ Currently focusing on scaffolding the Vapi webhook endpoints (`api/vapi-tools.js
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| Antigravity | Design initial Studio Mode UI layout shift | Complete |
-| USER | Verify Studio Mode UI mock | Complete |
-| Antigravity | Scaffold Vapi tool call webhook endpoints | In Progress |
+| Antigravity | Scaffold Vapi tool call webhook endpoints | Complete |
+| USER | Configure Vapi dashboard and schemas | Complete |
+| Antigravity | Scaffold SportsDataIO (NFL) integration | In Progress |

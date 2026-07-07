@@ -1160,14 +1160,16 @@
     <script src="auth.js"></script>
     <script src="html2canvas.min.js"></script>
     <script src="popup.js"></script>
+    <!-- Vapi Web SDK -->
+    <script src="https://unpkg.com/@vapi-ai/web/dist/vapi.bundle.js"></script>
     <script>
-        // Mock Studio Mode Logic
+        // Studio Mode & Vapi Logic
         document.addEventListener('DOMContentLoaded', () => {
             const studioToggle = document.getElementById('studioModeToggle');
             const studioContainer = document.getElementById('studioModeContainer');
             const welcomeContainer = document.getElementById('dashboardWelcome');
             
-            // Get all other containers in right panel
+            // ... (keep toggle logic unchanged)
             const otherContainers = [
                 document.getElementById('analyticsContainer'),
                 document.getElementById('teamsGamesContainer'),
@@ -1181,67 +1183,80 @@
                     isStudioMode = !isStudioMode;
                     
                     if (isStudioMode) {
-                        // Turn ON Studio Mode
                         studioToggle.style.background = '#2ecc71';
                         studioToggle.querySelector('.pulse-dot').classList.add('active');
-                        
-                        // Hide everything else in right panel
                         if (welcomeContainer) welcomeContainer.style.display = 'none';
                         otherContainers.forEach(c => { if(c) c.style.display = 'none'; });
-                        
-                        // Show Studio Mode
                         if (studioContainer) studioContainer.style.display = 'flex';
-
-                        // In Web App mode (mobile), hide left panel to maximize focus
                         if (window.innerWidth <= 1024) {
                             const lp = document.querySelector('.left-panel');
                             if (lp) lp.style.display = 'none';
                         }
                     } else {
-                        // Turn OFF Studio Mode
                         studioToggle.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
                         studioToggle.querySelector('.pulse-dot').classList.remove('active');
-                        
                         if (studioContainer) studioContainer.style.display = 'none';
                         if (welcomeContainer) welcomeContainer.style.display = 'block';
-
-                        // Restore left panel
                         const lp = document.querySelector('.left-panel');
                         if (lp) lp.style.display = 'block';
                     }
                 });
             }
 
-            // Mock Vapi Mic Button Interaction
+            // Real Vapi Mic Integration
             const vapiMicBtn = document.getElementById('vapiMicBtn');
             const mockStatCard = document.getElementById('mockStatCard');
             
+            // ACTION REQUIRED: Add your keys here from dashboard.vapi.ai
+            const VAPI_PUBLIC_KEY = 'e57014ec-f147-4ae9-ab3b-41fb56bf5048';
+            const ASSISTANT_ID = '852fe68f-bc23-484f-ba74-7e97bd291f4b';
+            
+            let vapiInstance = null;
+            let isListening = false;
+
+            if (typeof Vapi !== 'undefined' && VAPI_PUBLIC_KEY !== 'e57014ec-f147-4ae9-ab3b-41fb56bf5048') {
+                vapiInstance = new Vapi(VAPI_PUBLIC_KEY);
+                
+                vapiInstance.on('call-start', () => {
+                    isListening = true;
+                    vapiMicBtn.style.transform = 'scale(1.1)';
+                    vapiMicBtn.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.8)';
+                    vapiMicBtn.innerHTML = '<span style="font-size: 32px; color: white;">🛑</span>';
+                });
+                
+                vapiInstance.on('call-end', () => {
+                    isListening = false;
+                    vapiMicBtn.style.transform = 'scale(1)';
+                    vapiMicBtn.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.4)';
+                    vapiMicBtn.innerHTML = '<span style="font-size: 32px; color: white;">🎤</span>';
+                });
+                
+                vapiInstance.on('message', (message) => {
+                    // Trigger UI changes when Vapi triggers our tool
+                    if (message.type === 'tool-calls' && mockStatCard) {
+                        mockStatCard.style.display = 'block';
+                        mockStatCard.style.animation = 'fadeInUp 0.5s ease-out';
+                    }
+                });
+            }
+
             if (vapiMicBtn) {
-                let isListening = false;
                 vapiMicBtn.addEventListener('click', () => {
+                    if (VAPI_PUBLIC_KEY === 'e57014ec-f147-4ae9-ab3b-41fb56bf5048') {
+                        alert("Vapi is not configured! Please create a free account at vapi.ai and add your Public Key in popup.html.");
+                        return;
+                    }
+                    
                     if (!isListening) {
-                        isListening = true;
-                        vapiMicBtn.style.transform = 'scale(1.1)';
-                        vapiMicBtn.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.8)';
-                        mockStatCard.style.display = 'none';
-                        
-                        // Simulate Vapi processing
-                        setTimeout(() => {
-                            isListening = false;
-                            vapiMicBtn.style.transform = 'scale(1)';
-                            vapiMicBtn.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.4)';
-                            
-                            // Show Stat Card (simulate tool call return)
-                            if (mockStatCard) {
-                                mockStatCard.style.display = 'block';
-                                mockStatCard.style.animation = 'fadeInUp 0.5s ease-out';
-                            }
-                        }, 2000);
+                        vapiInstance.start(ASSISTANT_ID);
+                    } else {
+                        vapiInstance.stop();
                     }
                 });
             }
         });
     </script>
+
     <style>
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
