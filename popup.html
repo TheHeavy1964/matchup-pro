@@ -61,6 +61,12 @@
             50% { transform: translateY(-10px) rotate(1deg); }
         }
 
+        @keyframes micPulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
         .container {
             position: relative;
             z-index: 1;
@@ -862,6 +868,10 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="studioModeToggle" style="background: linear-gradient(45deg, #e74c3c, #c0392b); border: none; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); transition: all 0.3s;">
+                        <span class="pulse-dot" style="width: 6px; height: 6px; background: #fff; border-radius: 50%; display: inline-block;"></span> 
+                        Studio
+                    </button>
                     <div class="premium-badge" id="premiumBadge" style="cursor: pointer; display: none;">Pro</div>
                     <button id="logoutBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">Logout</button>
                 </div>
@@ -1109,6 +1119,39 @@
                 
                 <div id="playersBody" style="font-size: 13px; line-height: 1.5; color: white; max-height: 320px; overflow-y: auto; padding-right: 4px;"></div>
             </div> <!-- end playersContainer -->
+
+            <!-- Live Studio Mode Container -->
+            <div id="studioModeContainer" style="display: none; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 2px solid rgba(231, 76, 60, 0.3); border-radius: 16px; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); font-family: 'Outfit', sans-serif; text-align: center; height: 100%; flex-direction: column; justify-content: center; align-items: center; position: relative;">
+                
+                <!-- Live Indicator -->
+                <div style="position: absolute; top: 20px; left: 24px; display: flex; align-items: center; gap: 8px; background: rgba(231, 76, 60, 0.2); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(231, 76, 60, 0.5);">
+                    <div style="width: 8px; height: 8px; background: #e74c3c; border-radius: 50%; box-shadow: 0 0 8px #e74c3c; animation: micPulse 1.5s infinite;"></div>
+                    <span style="color: #e74c3c; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">On Air</span>
+                </div>
+
+                <div style="font-size: 64px; margin-bottom: 20px;">🎙️</div>
+                <h2 style="font-size: 28px; font-weight: 800; color: white; margin-bottom: 12px;">Live Studio Mode</h2>
+                <p style="font-size: 15px; color: #cbd5e1; max-width: 400px; line-height: 1.5; margin-bottom: 40px;">
+                    Hands-free voice queries powered by Vapi. Ask for any advanced stat, injury update, or matchup analysis.
+                </p>
+
+                <!-- Vapi Mic Placeholder -->
+                <button id="vapiMicBtn" style="background: linear-gradient(135deg, #10b981, #059669); border: none; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); transition: transform 0.2s, box-shadow 0.2s;">
+                    <span style="font-size: 32px; color: white;">🎤</span>
+                </button>
+                <div style="margin-top: 16px; font-size: 14px; color: #10b981; font-weight: 600;">Push to Talk</div>
+
+                <!-- Mock Stat Card (Hidden by default, shown when query answered) -->
+                <div id="mockStatCard" style="display: none; margin-top: 40px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 16px; padding: 24px; width: 100%; max-width: 480px; text-align: left; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                    <div style="font-size: 12px; color: #93c5fd; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Query: "Josh Allen vs Blitz"</div>
+                    <div style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 12px; line-height: 1.1;">3rd in NFL against blitz</div>
+                    <div style="display: flex; gap: 16px; font-size: 16px; color: #bfdbfe; font-weight: 600;">
+                        <span>12 TDs</span>
+                        <span>2 INTs</span>
+                        <span>114.2 Rating</span>
+                    </div>
+                </div>
+            </div>
         </div> <!-- end right-panel -->
     </div> <!-- end container -->
 
@@ -1117,5 +1160,93 @@
     <script src="auth.js"></script>
     <script src="html2canvas.min.js"></script>
     <script src="popup.js"></script>
+    <script>
+        // Mock Studio Mode Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const studioToggle = document.getElementById('studioModeToggle');
+            const studioContainer = document.getElementById('studioModeContainer');
+            const welcomeContainer = document.getElementById('dashboardWelcome');
+            
+            // Get all other containers in right panel
+            const otherContainers = [
+                document.getElementById('analyticsContainer'),
+                document.getElementById('teamsGamesContainer'),
+                document.getElementById('playersContainer')
+            ];
+
+            let isStudioMode = false;
+
+            if (studioToggle) {
+                studioToggle.addEventListener('click', () => {
+                    isStudioMode = !isStudioMode;
+                    
+                    if (isStudioMode) {
+                        // Turn ON Studio Mode
+                        studioToggle.style.background = '#2ecc71';
+                        studioToggle.querySelector('.pulse-dot').classList.add('active');
+                        
+                        // Hide everything else in right panel
+                        if (welcomeContainer) welcomeContainer.style.display = 'none';
+                        otherContainers.forEach(c => { if(c) c.style.display = 'none'; });
+                        
+                        // Show Studio Mode
+                        if (studioContainer) studioContainer.style.display = 'flex';
+
+                        // In Web App mode (mobile), hide left panel to maximize focus
+                        if (window.innerWidth <= 1024) {
+                            const lp = document.querySelector('.left-panel');
+                            if (lp) lp.style.display = 'none';
+                        }
+                    } else {
+                        // Turn OFF Studio Mode
+                        studioToggle.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+                        studioToggle.querySelector('.pulse-dot').classList.remove('active');
+                        
+                        if (studioContainer) studioContainer.style.display = 'none';
+                        if (welcomeContainer) welcomeContainer.style.display = 'block';
+
+                        // Restore left panel
+                        const lp = document.querySelector('.left-panel');
+                        if (lp) lp.style.display = 'block';
+                    }
+                });
+            }
+
+            // Mock Vapi Mic Button Interaction
+            const vapiMicBtn = document.getElementById('vapiMicBtn');
+            const mockStatCard = document.getElementById('mockStatCard');
+            
+            if (vapiMicBtn) {
+                let isListening = false;
+                vapiMicBtn.addEventListener('click', () => {
+                    if (!isListening) {
+                        isListening = true;
+                        vapiMicBtn.style.transform = 'scale(1.1)';
+                        vapiMicBtn.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.8)';
+                        mockStatCard.style.display = 'none';
+                        
+                        // Simulate Vapi processing
+                        setTimeout(() => {
+                            isListening = false;
+                            vapiMicBtn.style.transform = 'scale(1)';
+                            vapiMicBtn.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.4)';
+                            
+                            // Show Stat Card (simulate tool call return)
+                            if (mockStatCard) {
+                                mockStatCard.style.display = 'block';
+                                mockStatCard.style.animation = 'fadeInUp 0.5s ease-out';
+                            }
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </body>
 </html>
