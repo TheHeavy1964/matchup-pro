@@ -20,13 +20,13 @@
 
 ## 🚀 Current Trajectory
 
-**Phase 1: Studio Mode UI & Vapi Prototyping**
-Currently focusing on the visual transformation of the dashboard when "Live Studio Mode" is activated, and preparing the foundation for the Vapi Web SDK to handle audio orchestration.
+**Phase 2: Backend Tool Calling & Integration (Vercel API)**
+Currently focusing on scaffolding the Vapi webhook endpoints (`api/vapi-tools.js`) to process tool calls (e.g. fetching advanced stats) triggered by the LLM.
 
 ## ✏️ Squad Status
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| Antigravity | Initialize PLAN.md and incorporate Vapi/TTS architecture | Complete |
-| Antigravity | Design initial Studio Mode UI layout shift | Pending |
-| USER | Review updated plan and confirm tech stack additions | Pending |
+| Antigravity | Design initial Studio Mode UI layout shift | Complete |
+| USER | Verify Studio Mode UI mock | Complete |
+| Antigravity | Scaffold Vapi tool call webhook endpoints | In Progress |
