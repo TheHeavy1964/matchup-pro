@@ -1161,8 +1161,8 @@
     <script src="html2canvas.min.js"></script>
     <script src="popup.js"></script>
     <!-- Vapi Web SDK -->
-    <script src="https://unpkg.com/@vapi-ai/web/dist/vapi.bundle.js"></script>
-    <script>
+    <script type="module">
+        import Vapi from 'https://esm.sh/@vapi-ai/web@2.6.1';
         // Studio Mode & Vapi Logic
         document.addEventListener('DOMContentLoaded', () => {
             const studioToggle = document.getElementById('studioModeToggle');
