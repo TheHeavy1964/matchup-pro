@@ -121,7 +121,7 @@ async function getTeamAdvancedStats(args) {
 
 async function getNflAdvancedStats(args) {
     const { team_abbreviation, year } = args;
-    const targetYear = year || new Date().getFullYear();
+    const targetYear = year || 2023; // Hardcode to 2023 for reliable historical data if not specified
     const sdioApiKey = process.env.SPORTS_DATA_IO_KEY;
 
     if (!sdioApiKey) {
