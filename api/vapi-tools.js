@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
 
 async function getTeamAdvancedStats(args) {
     const { team, year } = args;
-    const targetYear = year || new Date().getFullYear();
+    const targetYear = year || 2023; // Hardcode to 2023 for reliable historical data if not specified
     const cfbdApiKey = process.env.CFBD_API_KEY;
 
     if (!cfbdApiKey) {
