@@ -61,7 +61,8 @@ module.exports = async (req, res) => {
             });
         }
 
-        return res.status(400).json({ error: 'Invalid payload type' });
+        // Acknowledge other webhook types gracefully (e.g. status-update) so Vapi doesn't crash/hang up
+        return res.status(200).json({ message: 'Webhook received successfully' });
 
     } catch (error) {
         console.error('Vapi Tool Call Error:', error);
