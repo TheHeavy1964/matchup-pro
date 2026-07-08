@@ -5,6 +5,8 @@
   "main": "api/verify-stripe.js",
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "@vapi-ai/web": "^2.6.1",
+    "esbuild": "^0.28.1",
     "stripe": "^14.0.0"
   }
 }
