@@ -1214,7 +1214,7 @@
             let vapiInstance = null;
             let isListening = false;
 
-            if (typeof Vapi !== 'undefined' && VAPI_PUBLIC_KEY !== 'e57014ec-f147-4ae9-ab3b-41fb56bf5048') {
+            if (typeof Vapi !== 'undefined' && VAPI_PUBLIC_KEY) {
                 vapiInstance = new Vapi(VAPI_PUBLIC_KEY);
                 
                 vapiInstance.on('call-start', () => {
@@ -1242,7 +1242,7 @@
 
             if (vapiMicBtn) {
                 vapiMicBtn.addEventListener('click', () => {
-                    if (VAPI_PUBLIC_KEY === 'e57014ec-f147-4ae9-ab3b-41fb56bf5048') {
+                    if (!VAPI_PUBLIC_KEY) {
                         alert("Vapi is not configured! Please create a free account at vapi.ai and add your Public Key in popup.html.");
                         return;
                     }
