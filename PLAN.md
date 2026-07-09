@@ -19,14 +19,15 @@
    - Integrate predictive live-odds features.
 
 ## 🚀 Current Trajectory
-
-**Phase 2: Backend Tool Calling & Integration (Vercel API)**
-Currently focusing on scaffolding the Vapi webhook endpoints (`api/vapi-tools.js`) to process tool calls (e.g. fetching advanced stats) triggered by the LLM.
+**Phase 3: Multi-Modal Synchronization & Validation**
+Successfully created and attached all 3 tools (CFB stats, NFL stats, Player injuries) to the Vapi assistant, resolved voice errors to enable publishing, wired up Google Fonts (Outfit), and implemented a live transcript/stat card display in popup.html.
 
 ## ✏️ Squad Status
 
 | Agent | Task | Status |
 | :--- | :--- | :--- |
-| Antigravity | Scaffold Vapi tool call webhook endpoints | Complete |
-| USER | Configure Vapi dashboard and schemas | Complete |
-| Antigravity | Scaffold SportsDataIO (NFL) integration | In Progress |
+| Antigravity | Build and attach Vapi tools via script | Complete |
+| Antigravity | Add live transcripts & Outfit font to popup.html | Complete |
+| USER | Publish assistant changes in Vapi dashboard | Pending |
+| Antigravity | Verify end-to-end voice query pipeline | In Progress |
+

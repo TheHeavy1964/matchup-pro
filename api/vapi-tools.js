@@ -70,11 +70,22 @@ module.exports = async (req, res) => {
     }
 };
 
-// --- Tool Implementations (Stubs to be expanded in Phase 2) ---
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Wraps fetch with an AbortController timeout so a slow upstream API
+// fails fast with a clean error instead of hanging until Vapi gives up.
+function fetchWithTimeout(url, options = {}, timeoutMs = 7000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timer));
+}
+
+// ─── Tool Implementations ─────────────────────────────────────────────────────
 
 async function getTeamAdvancedStats(args) {
     const { team, year } = args;
-    const targetYear = year || 2023; // Hardcode to 2023 for reliable historical data if not specified
+    const targetYear = year || 2023;
     const cfbdApiKey = process.env.CFBD_API_KEY;
 
     if (!cfbdApiKey) {
@@ -82,39 +93,72 @@ async function getTeamAdvancedStats(args) {
         return { error: 'API configuration missing on backend.' };
     }
 
-    console.log(`Fetching advanced stats for ${team} in ${targetYear}`);
-    
+    console.log(`Fetching stats for ${team} in ${targetYear}`);
+
     try {
-        // Fetch SP+ ratings from CFBD
-        const response = await fetch(`https://api.collegefootballdata.com/ratings/sp?year=${targetYear}&team=${encodeURIComponent(team)}`, {
-            headers: {
-                'Authorization': `Bearer ${cfbdApiKey}`,
-                'Accept': 'application/json'
-            }
-        });
+        const headers = {
+            'Authorization': `Bearer ${cfbdApiKey}`,
+            'Accept': 'application/json'
+        };
 
-        if (!response.ok) {
-            return { error: `CFBD API returned ${response.status}` };
+        // Fetch SP+ ratings AND actual season stats in parallel (7s timeout each)
+        const [spResponse, statsResponse] = await Promise.all([
+            fetchWithTimeout(
+                `https://api.collegefootballdata.com/ratings/sp?year=${targetYear}&team=${encodeURIComponent(team)}`,
+                { headers }
+            ),
+            fetchWithTimeout(
+                `https://api.collegefootballdata.com/stats/season?year=${targetYear}&team=${encodeURIComponent(team)}`,
+                { headers }
+            )
+        ]);
+
+        const spData   = spResponse.ok   ? await spResponse.json()   : [];
+        const rawStats = statsResponse.ok ? await statsResponse.json() : [];
+
+        // CFBD /stats/season returns rows like { statName, statValue } — flatten into an object
+        const stats = {};
+        for (const row of rawStats) {
+            stats[row.statName] = row.statValue;
         }
 
-        const data = await response.json();
-        
-        if (!data || data.length === 0) {
-            return { message: `No SP+ advanced stats found for ${team} in ${targetYear}.` };
-        }
+        const sp = spData[0];
 
-        const teamData = data[0];
-
-        // Return a highly condensed payload for the LLM
+        // Return a rich payload so the LLM can answer any common stat question
         return {
-            team: teamData.team,
-            year: teamData.year,
-            overall_sp_plus_rating: teamData.rating,
-            national_ranking: teamData.ranking,
-            offensive_rating: teamData.offense?.rating,
-            defensive_rating: teamData.defense?.rating
+            team,
+            year: targetYear,
+            // Offensive season totals
+            rushing_yards:            stats.rushingYards           ?? null,
+            rushing_yards_per_game:   stats.rushingYardsPerGame    ?? null,
+            rushing_attempts:         stats.rushingAttempts         ?? null,
+            rushing_tds:              stats.rushingTDs              ?? null,
+            net_passing_yards:        stats.netPassingYards         ?? null,
+            passing_yards_per_game:   stats.passingYardsPerGame     ?? null,
+            completions:              stats.completions             ?? null,
+            pass_attempts:            stats.passAttempts            ?? null,
+            passing_tds:              stats.passingTDs              ?? null,
+            total_yards:              stats.totalYards              ?? null,
+            yards_per_play:           stats.yardsPerPlay            ?? null,
+            points_per_game:          stats.pointsPerGame           ?? null,
+            first_downs:              stats.firstDowns              ?? null,
+            // Defensive / turnover
+            turnovers:                stats.turnovers               ?? null,
+            interceptions_thrown:     stats.interceptions           ?? null,
+            fumbles_lost:             stats.fumblesLost             ?? null,
+            sacks_allowed:            stats.sacksAllowed            ?? null,
+            tackles_for_loss_allowed: stats.tacklesForLossAllowed   ?? null,
+            // SP+ efficiency ratings
+            sp_plus_rating:           sp?.rating                    ?? null,
+            sp_plus_national_ranking: sp?.ranking                   ?? null,
+            offensive_sp_plus:        sp?.offense?.rating           ?? null,
+            defensive_sp_plus:        sp?.defense?.rating           ?? null
         };
     } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('CFBD API timed out after 7s');
+            return { error: 'CFBD API timed out. Try again in a moment.' };
+        }
         console.error('CFBD Fetch Error:', error);
         return { error: 'Failed to fetch data from CFBD.' };
     }
@@ -133,8 +177,10 @@ async function getNflAdvancedStats(args) {
     console.log(`Fetching NFL stats for ${team_abbreviation} in ${targetYear}`);
     
     try {
-        // SportsDataIO NFL Team Season Stats endpoint (using standard regular season)
-        const response = await fetch(`https://api.sportsdata.io/v3/nfl/scores/json/TeamSeasonStats/${targetYear}REG?key=${sdioApiKey}`);
+        // SportsDataIO NFL Team Season Stats endpoint (7s timeout)
+        const response = await fetchWithTimeout(
+            `https://api.sportsdata.io/v3/nfl/scores/json/TeamSeasonStats/${targetYear}REG?key=${sdioApiKey}`
+        );
 
         if (!response.ok) {
             return { error: `SportsDataIO API returned ${response.status}` };
@@ -160,6 +206,10 @@ async function getNflAdvancedStats(args) {
             third_down_percentage: teamData.ThirdDownPercentage
         };
     } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('SportsDataIO API timed out after 7s');
+            return { error: 'NFL API timed out. Try again in a moment.' };
+        }
         console.error('SportsDataIO Fetch Error:', error);
         return { error: 'Failed to fetch data from SportsDataIO.' };
     }

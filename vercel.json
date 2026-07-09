@@ -1,9 +1,14 @@
 {
   "version": 2,
+  "functions": {
+    "api/vapi-tools.js": { "maxDuration": 30 },
+    "api/cfbd.js":       { "maxDuration": 15 }
+  },
   "rewrites": [
-    { "source": "/api/cfbd", "destination": "/api/cfbd.js" },
-    { "source": "/api/verify-stripe", "destination": "/api/verify-stripe.js" },
-    { "source": "/options", "destination": "/options.html" },
-    { "source": "/", "destination": "/popup.html" }
+    { "source": "/api/vapi-tools",   "destination": "/api/vapi-tools.js" },
+    { "source": "/api/cfbd",         "destination": "/api/cfbd.js" },
+    { "source": "/api/verify-stripe","destination": "/api/verify-stripe.js" },
+    { "source": "/options",          "destination": "/options.html" },
+    { "source": "/",                 "destination": "/popup.html" }
   ]
 }

@@ -3,6 +3,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Google Fonts: Outfit (used throughout Studio Mode and right-panel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <title>Matchup Pro – Smart Football Analytics</title>
     <meta name="description" content="Matchup Pro provides premium, glassmorphic analytics, advanced stats, Expected Points calculations, win probability, and rosters for CFB and NFL matchups." />
     <!-- Open Graph Metadata -->
@@ -818,6 +822,69 @@
                 box-sizing: border-box;
             }
         }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Vapi Live Transcript ── */
+        #vapiTranscript {
+            width: 100%;
+            max-width: 480px;
+            margin-top: 32px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            max-height: 260px;
+            overflow-y: auto;
+            display: none;
+        }
+        #vapiTranscript .transcript-msg {
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            animation: fadeInUp 0.3s ease;
+        }
+        #vapiTranscript .transcript-msg.user {
+            color: #93c5fd;
+        }
+        #vapiTranscript .transcript-msg.user::before {
+            content: '🎤  ';
+        }
+        #vapiTranscript .transcript-msg.assistant {
+            color: #d1fae5;
+        }
+        #vapiTranscript .transcript-msg.assistant::before {
+            content: '🤖  ';
+        }
+        #vapiStatCard {
+            display: none;
+            margin-top: 20px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+            text-align: left;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.4s ease;
+        }
+        #vapiStatCard .stat-headline {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        #vapiStatCard .stat-sub {
+            font-size: 13px;
+            color: #93c5fd;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -1141,15 +1208,13 @@
                 </button>
                 <div style="margin-top: 16px; font-size: 14px; color: #10b981; font-weight: 600;">Push to Talk</div>
 
-                <!-- Mock Stat Card (Hidden by default, shown when query answered) -->
-                <div id="mockStatCard" style="display: none; margin-top: 40px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 16px; padding: 24px; width: 100%; max-width: 480px; text-align: left; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-                    <div style="font-size: 12px; color: #93c5fd; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Query: "Josh Allen vs Blitz"</div>
-                    <div style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 12px; line-height: 1.1;">3rd in NFL against blitz</div>
-                    <div style="display: flex; gap: 16px; font-size: 16px; color: #bfdbfe; font-weight: 600;">
-                        <span>12 TDs</span>
-                        <span>2 INTs</span>
-                        <span>114.2 Rating</span>
-                    </div>
+                <!-- Live Vapi Transcript — updates in real time as assistant speaks -->
+                <div id="vapiTranscript"></div>
+
+                <!-- Live Stat Card — populated by Vapi tool call results -->
+                <div id="vapiStatCard">
+                    <div class="stat-sub" id="vapiStatLabel">Loading stat...</div>
+                    <div class="stat-headline" id="vapiStatHeadline">—</div>
                 </div>
             </div>
         </div> <!-- end right-panel -->
@@ -1163,11 +1228,6 @@
     <!-- Vapi Web SDK -->
     <script type="module" src="vapi-setup.bundle.js"></script>
 
-    <style>
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    <!-- fadeInUp moved to <head> styles -->
 </body>
 </html>
