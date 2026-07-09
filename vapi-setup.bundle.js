@@ -11502,11 +11502,9 @@ Reason: ${e4}`);
               cleanKeywords.push(`${alphaW}${weightPart}`);
             }
           });
+          const { keywords, ...transcriberWithoutKeywords } = SPORTS_TRANSCRIBER;
           vapiInstance.start(ASSISTANT_ID, {
-            transcriber: {
-              ...SPORTS_TRANSCRIBER,
-              keywords: cleanKeywords
-            }
+            transcriber: transcriberWithoutKeywords
           });
         } else {
           vapiInstance.stop();

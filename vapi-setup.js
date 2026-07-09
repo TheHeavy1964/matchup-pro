@@ -398,12 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // Inject sports transcriber at call time — overrides assistant defaults
+                // Inject sports transcriber at call time without keywords
+                // Deepgram nova-2 is highly accurate by default. Overloading it with
+                // 100+ keywords causes it to constantly hallucinate those words.
+                const { keywords, ...transcriberWithoutKeywords } = SPORTS_TRANSCRIBER;
                 vapiInstance.start(ASSISTANT_ID, {
-                    transcriber: {
-                        ...SPORTS_TRANSCRIBER,
-                        keywords: cleanKeywords
-                    }
+                    transcriber: transcriberWithoutKeywords
                 });
             } else {
                 vapiInstance.stop();
